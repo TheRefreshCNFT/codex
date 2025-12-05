@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=968">
+  <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Refresh Bingo</title>
   <link rel="icon" type="image/png" href="RF5.png">
   <style>
@@ -5507,6 +5507,7 @@ if (isIOS) {
     const gateOverlay     = document.getElementById('gateOverlay');
     const protectedArea   = document.getElementById('protectedArea');
     const payAccessBtn    = document.getElementById('payAccessBtn');
+    const viewportMeta    = document.getElementById('viewportMeta');
 
     // 🔁 Same address you already use for gate payments
     const GATE_RECIPIENT_ADDRESS =
@@ -5524,6 +5525,11 @@ if (isIOS) {
         purchaseUrl: 'https://www.jpg.store/collection/therefresh'
       }
     ];
+
+    function setViewport(content) {
+      if (!viewportMeta) return;
+      viewportMeta.setAttribute('content', content);
+    }
 
     let meshWallet    = null;
     let userAddress   = null;
@@ -5941,6 +5947,8 @@ contactForm.addEventListener('submit', function(e) {
     }
 
     function enterApp() {
+      setViewport('width=968');
+
       gateOverlay.classList.add('hidden');
       protectedArea.classList.remove('hidden');
 
