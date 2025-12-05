@@ -370,8 +370,9 @@
 }
 
 #settingsToggle {
-  padding: 0.4em 0.75em;
-  font-size: 1em;
+  padding: 0.35em 0.75em;
+  font-size: 1.15em;
+  line-height: 1.2;
   border-radius: 6px;
   background: #2e3d49;
   border: 1px solid #fff;
@@ -5929,6 +5930,12 @@ contactForm.addEventListener('submit', function(e) {
         isVip: isVipHolder,
         hasPaidAccess,
       };
+
+      // Ensure the bingo layout scales correctly on first reveal
+      requestAnimationFrame(() => {
+        if (typeof resizeApp === 'function') resizeApp();
+        if (typeof adjustLayout === 'function') adjustLayout();
+      });
     }
 
     connectBtn.addEventListener('click', handleConnect);
