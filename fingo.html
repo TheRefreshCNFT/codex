@@ -402,7 +402,7 @@
 }
 
 .settings-wrapper.open .settings-menu {
-  display: flex;
+  display: grid;
 }
 
 .settings-menu button {
@@ -2738,7 +2738,7 @@ function willThisWindowFinish(track, winnersArr) {
           closeMenus();
           if (willOpen) {
             settingsWrap.classList.add('open');
-            settingsMenu.style.display = 'flex';
+            settingsMenu.style.display = 'grid';
           }
         });
 
