@@ -350,9 +350,9 @@
 #usernameSection {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1em;
-  text-align: left;
+  text-align: center;
   margin: 0.25em 0 !important;
   flex-wrap: wrap;
 }
@@ -360,6 +360,7 @@
 .top-controls {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5em;
   flex: 0 0 auto;
 }
@@ -388,28 +389,29 @@
   top: calc(100% + 0.35em);
   left: 0;
   display: none;
-  flex-direction: column;
   gap: 0.35em;
   background: #2e3d49;
   border: 1px solid #fff;
   border-radius: 8px;
   padding: 0.35em;
-  min-width: 170px;
+  min-width: 200px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.6);
   z-index: 10012;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 .settings-wrapper.open .settings-menu {
-  display: flex;
+  display: grid;
 }
 
 .settings-menu button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4em;
-  justify-content: flex-start;
   width: 100%;
-  text-align: left;
+  text-align: center;
   background: transparent;
   color: #fff;
   border: 1px solid rgba(255,255,255,0.15);
@@ -435,10 +437,14 @@
 .grid-wrapper {
   position: relative;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .username-stack {
-  flex: 1 1 420px;
+  flex: 1 1 520px;
+  min-width: min(95vw, 520px);
+  max-width: 760px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -446,11 +452,14 @@
 }
 
 /* style the post-submit username display */
+.username-pill,
 #usernameSection > p {
   margin: 0;
   margin: 0.075em 0 !important;
   padding: 0.35em 1em;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.75em;
   font-weight: bold;
   color: #000;
@@ -475,6 +484,10 @@
   width: 100%;
   max-width: 720px;
   margin: .25em auto 0.15em;
+}
+
+#usernameSection .username-row.signed-in {
+  justify-content: center;
 }
 
 /* styled text‐field */
@@ -2547,11 +2560,10 @@ function willThisWindowFinish(track, winnersArr) {
               // prefer removing the confirm prompt if it exists, otherwise the input row
               const confirmDiv = document.getElementById('usernameConfirm');
               const row        = confirmDiv || document.querySelector('#usernameSection .username-row');
-
-              const p   = document.createElement('p');
-              p.style.cssText = 'margin:0;font-weight:bold';
-              p.textContent   = username;
-              row.replaceWith(p);
+              const displayRow = document.createElement('div');
+              displayRow.className = 'username-row signed-in';
+              displayRow.innerHTML = `<span class="username-pill">${username}</span>`;
+              row.replaceWith(displayRow);
               document.getElementById('usernameMessage').textContent = '';
             }
 
@@ -2704,7 +2716,7 @@ function willThisWindowFinish(track, winnersArr) {
           closeMenus();
           if (willOpen) {
             settingsWrap.classList.add('open');
-            settingsMenu.style.display = 'flex';
+            settingsMenu.style.display = 'grid';
           }
         });
 
