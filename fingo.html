@@ -330,13 +330,11 @@
 
   <!-- Bingo styles -->
   <style>
-   /* Let the protected app lay out like index.html (no gate container constraining or centering) */
+   /* Ensure the post-gate app isn't constrained by the gate's container sizing */
    #protectedArea .container {
-     display: contents;
      max-width: none;
-     width: auto;
+     width: 100%;
      padding: 0;
-     margin: 0;
    }
 
    html, body { width:100%; height:100%; margin:0; padding:0; box-sizing:border-box; }
