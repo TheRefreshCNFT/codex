@@ -364,6 +364,16 @@
   justify-content: center;
 }
 
+.top-controls .grid-toggle {
+  min-height: 44px;
+  padding: 0 .75em;
+  font-size: 1.25em;
+  border-radius: 6px;
+  border: 1px solid #fff;
+  background: #2e3d49;
+  color: #fff;
+}
+
 /* Square layouts switch #mainDeck to grid, keep centered; OG stays flex */
 #mainDeck.square {
   display: grid !important;
@@ -2205,14 +2215,8 @@ function willThisWindowFinish(track, winnersArr) {
         // # grid button
         const gridBtn = document.createElement('button');
         gridBtn.id = 'gridBtn';
+        gridBtn.className = 'grid-toggle';
         gridBtn.textContent = '#';
-        gridBtn.style.cssText = `
-          font-size: 3em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color:#fff;
-        `;
         gridBtn.hidden = true; // hidden for everyone until admin logs in
 
         // 🎙 mic button (muted by default)
@@ -4212,13 +4216,14 @@ function renderDeck() {
         li.classList.add('active');
       } else {
         li.id = `num-${val}`;
-        li.innerHTML = `<p>${val}</p>`;
-      }
-      deck.appendChild(li);
-    });
+      li.innerHTML = `<p>${val}</p>`;
+    }
+    deck.appendChild(li);
+  });
 
-    return;
-  }
+  requestAnimationFrame(resizeApp);
+  return;
+}
 
   // ── OG board (unchanged layout & emoji) ─────────────────────────────
   deck.classList.remove('square');
@@ -4253,16 +4258,18 @@ function renderDeck() {
       li.classList.add('active');
     } else {
       li.id = id;
-      li.innerHTML = connectionArray[id];
-    }
-    deck.appendChild(li);
-  });
+    li.innerHTML = connectionArray[id];
+  }
+  deck.appendChild(li);
+});
 
-  // 6) refresh remaining-positions pool (unchanged)
-  const totalCards = deck.children.length;
-  window.remainingPositions = shuffle(
-    Array.from({ length: totalCards }, (_, idx) => idx)
-  );
+// 6) refresh remaining-positions pool (unchanged)
+const totalCards = deck.children.length;
+window.remainingPositions = shuffle(
+  Array.from({ length: totalCards }, (_, idx) => idx)
+);
+
+  requestAnimationFrame(resizeApp);
 }
 
 
