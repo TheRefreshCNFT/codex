@@ -1,0 +1,5794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=968">
+  <title>Refresh Bingo</title>
+  <link rel="icon" type="image/png" href="RF5.png">
+  <style>
+    :root {
+      --gap: 1rem;
+      --pad: .5rem;
+      --primary: #2196F3;
+      --primary-dark: #1976D2;
+      --secondary: #21CBF3;
+      --text: #e4e8ff;
+      --text-light: #9aa3d9;
+      --bg: #050810;
+      --card-bg: rgba(7, 12, 30, 0.92);
+      --border: rgba(120, 141, 255, 0.35);
+      --success: #4CAF50;
+      --error: #f44336;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #000;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .hidden { display: none !important; }
+
+    /* --- WALLET GATE OVERLAY --- */
+    #gateOverlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: radial-gradient(circle at top left, #202738 0, #050810 55%, #020308 100%);
+      color: #e4e8ff;
+    }
+
+    header {
+      position: relative;
+      background: transparent;
+      color: white;
+      text-align: center;
+      padding: 2rem var(--pad) 1.5rem;
+      box-shadow: none;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #description {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-bottom: 1.5rem;
+    }
+
+    #instructions {
+      font-size: 1rem;
+      margin: 1rem 0;
+      color: #a9b5ff;
+    }
+
+    #walletStatus {
+      background: rgba(9, 16, 40, 0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(106, 255, 183, 0.4);
+      color: #a7ffcb;
+      padding: 0.5rem 1.5rem;
+      display: inline-block;
+      margin-top: 1rem;
+      font-weight: 500;
+      backdrop-filter: blur(5px);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 var(--pad);
+    }
+
+    .gate-card {
+      background: rgba(5, 10, 24, 0.9);
+      border-radius: 18px;
+      border: 1px solid rgba(120, 141, 255, 0.25);
+      box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+      color: #e4e8ff;
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      margin: 2rem auto;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button:disabled,
+    .loc-btn-primary:disabled,
+    .loc-btn-secondary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    #connectBtn {
+      background: linear-gradient(135deg, #ff3366, #ffc857);
+      color: #050814;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      border-radius: 999px;
+    }
+
+    #connectBtn:hover {
+      background: linear-gradient(135deg, #ff4b80, #ffd46b);
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    #connectBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    select {
+      padding: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 1rem;
+      width: 100%;
+      background: rgba(3, 7, 20, 0.9);
+      border-color: rgba(96, 125, 255, 0.6);
+      color: #e4e8ff;
+    }
+
+    .access-message {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #b7c3ff;
+      white-space: pre-line;
+    }
+
+    .access-message strong { color: var(--success); }
+    .access-message.error { color: #ff8b94; }
+
+    .access-message a {
+      color: #ffc857;
+      text-decoration: underline;
+    }
+
+    header .container {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      width: 52px;
+      height: auto;
+      padding: 0.25rem;
+      background: rgba(5, 8, 16, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55);
+    }
+
+    header h1 {
+      font-size: 2.1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .backups-logo-text {
+      display: inline-flex;
+      align-items: baseline;
+      background: linear-gradient(135deg, #ff9a3c, #ffd869);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      text-shadow: 0 0 18px rgba(255, 200, 120, 0.55);
+      line-height: 1;
+    }
+
+    .backups-logo-text-main {
+      font-size: 1em;
+    }
+
+    .backups-logo-beta {
+      font-size: 0.55em;
+      letter-spacing: 0.18em;
+      margin-left: 0.35em;
+    }
+
+    .backups-inline-highlight {
+      font-weight: 600;
+      background: linear-gradient(135deg, #ff9a3c, #ffd869);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 5px rgba(255, 200, 120, 0.55);
+    }
+
+    .access-steps {
+      margin-top: 0.75rem;
+      padding: 0.75rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .gate-subtitle {
+      margin: 0 0 0.35rem 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .gate-list {
+      margin: 0;
+      padding-left: 1.25rem;
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    .gate-list li {
+      margin-bottom: 0.25rem;
+    }
+
+    .loc-hint {
+      font-size: 0.75rem;
+      opacity: 0.75;
+    }
+
+    .loc-legal {
+      margin-top: 0.75rem;
+      font-size: 0.7rem;
+      opacity: 0.75;
+    }
+
+    .loc-legal-text {
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .loc-btn-primary,
+    .loc-btn-secondary {
+      border-radius: 999px;
+      padding: 0.55rem 1rem;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .loc-btn-primary {
+      background: linear-gradient(135deg, #ff3366, #ffc857);
+      color: #050814;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+      margin-top: 0.25rem;
+    }
+
+    .loc-btn-primary:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .loc-btn-secondary {
+      background: rgba(10, 18, 46, 0.9);
+      color: #e4e8ff;
+      border: 1px solid rgba(120, 141, 255, 0.6);
+    }
+
+    /* --- APP SECTION CSS PLACEHOLDER ---
+       Put any app-specific styles here and target #appRoot or children.
+    */
+    /*
+    #appRoot {
+      // your VanID / other app layout styles
+    }
+    */
+
+    @media (max-width: 600px) {
+      header .container { padding-top: 1.5rem; }
+      header h1 { font-size: 1.9rem; }
+      .gate-card { margin-top: 1.5rem; padding: 1.5rem; }
+      .row { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+
+  <!-- Bingo styles -->
+  <style>
+    html, body { width:100%; height:100%; margin:0; padding:0; box-sizing:border-box; }
+   *, *::before, *::after { box-sizing:inherit; }
+   body {
+    background-color: #000 !important;
+  font-family: sans-serif;
+  min-height: 100vh;
+}
+/* container */
+#usernameSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;  /* or flex-start if you want it left-justified */
+  gap: 1em;                  /* space between the button and the input row */
+  text-align: left;    
+  margin: 0.25em 0 !important;
+}
+
+/* style the post-submit username display */
+#usernameSection > p {
+  margin: 0;              /* you already have this */
+  margin: 0.075em 0 !important;
+  padding: 0.05em 1em;     /* give it some breathing room */
+  display: inline-block;  /* shrink-wrap to content */
+  font-size: 2em;       /* or whatever size feels right */
+  font-weight: bold;
+  color: #000;            /* text color */
+  background: #2e3d49;    /* match your theme */
+  border: 1px solid #fff; /* give it a frame */
+  border-radius: 6px;     /* soften the corners */
+  box-shadow: 
+    0 2px 4px rgba(0,0,0,0.6),   /* deep drop-shadow */
+    inset 0 0 8px rgba(255,255,255,0.85); /* subtle inner glow */
+  text-shadow: 
+    0 1px 2px rgba(0,0,0,0.8),    /* lift the letters */
+    0 0 8px rgba(255,255,255,1);/* a little halo if you like */
+}
+
+
+/* flex‐row wrapper */
+/* flex‐row wrapper (unchanged) */
+#usernameSection .username-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%; 
+  margin: .25em auto 0.15em;
+}
+
+/* styled text‐field */
+#usernameInput {
+  flex: 1;
+  padding: .5em .5em;     /* 1em top/bottom gives more height */
+  font-size: 2.15em;
+  border-radius: 6px 6px 6px 6px;
+  border: 2px solid #fff;
+  background: #2e3d49;
+  color: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* placeholder color (so it’s visible on dark bg) */
+#usernameInput::placeholder {
+  color: rgba(255,255,255,.8);
+}
+
+/* snug, tappable button */
+#usernameSubmit {
+  flex: 0 0 auto;
+  padding: .5em .75em;
+  font-size: 2em;
+  border-radius: 6px 6px 6px 6px;
+  border: 1px solid #fff;
+  background: #2e3d49;
+  color: #fff;
+  cursor: pointer;
+}
+#usernameSubmit:hover {
+  background: purple;
+}
+
+/* feedback message */
+#usernameMessage {
+  margin-top: 0.15em;
+  height: 1.2em;
+  color: #fff;
+}
+
+#usernameSection .card.lb {
+  flex: 0 0 auto;            /* don’t stretch */
+  padding: 0em .5em;
+  font-size: 1.25em;
+  border-radius: 6px 6px 6px 6px;
+  border: 1px solid #fff;
+  background: #2e3d49;
+  color: #fff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* when #usernameSection has .hide-join, hide the input + submit row */
+.hide-join .username-row {
+  display: none !important;
+}
+
+/* Enlarge the confirmation prompt text and buttons */
+#usernameConfirm {
+  border-radius: 6px 6px 6px 6px;
+  border: 1px solid #fff;
+  color: #fff;
+  font-size: 2.25em;           /* match your input font-size */
+}
+#usernameConfirm button,
+#usernameConfirm a {
+  font-size: inherit !important;
+}
+
+#usernameConfirmNo {
+   color: #fff;
+}
+
+   #announcement {
+  text-shadow: 0 2px 8px #ffffff, 0 0 2px #ffffff;
+  min-height: 3.5rem;
+  margin: 1em;
+}
+
+   /* Text colors */
+   .sky { color: deepskyblue; }
+   .outdoors { color: lawngreen; }
+   .drinks { color: deeppink; }
+   .colors { color: mediumpurple; }
+   .community { color: orange; }
+   .random { color: linear-gradient(to right, deepskyblue, lawngreen, deeppink, mediumpurple, orange); }
+
+   /* Deck layouts */
+   .deck2, .deck { 
+  width: 100%; 
+  max-width: 968px; 
+  margin: .5em auto; 
+  padding: 10px 0; 
+  border-radius:10px; 
+  background:rgba(255,255,255,0.1);
+}
+
+   .deck { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; height:662px;  }
+   .deck .card { font-size: 1.25em; width:100px; height:100px; background:#2e3d49; color:#fff; border-radius:8px; display:flex; justify-content:center; align-items:center; text-align:center; cursor:pointer; box-shadow:2px 2px 2px #000; }
+   .deck .card.active { background:#000; border:2px solid red; transform:translateY(2px); box-shadow:none; }
+
+   /* Legend & controls alignment */
+   .deck2 {
+     display:block;
+     margin-top: 0em;
+     padding-top: 5px;
+   }
+   #legendDeck ul, #legendDeck2 ul, #controlDeck ul {
+     display: grid;
+     grid-template-columns: repeat(9, 1fr);
+     margin: 0; padding: 0; list-style: none;
+     row-gap: 1em;
+     column-gap: 1em;
+   }
+   #legendDeck ul > li:nth-child(1) {
+     grid-column: 3;
+   }
+   #legendDeck ul > li:nth-child(2) {
+     grid-column: 4;
+   }
+   #legendDeck ul > li:nth-child(3) {
+     grid-column: 5;
+   }
+   #legendDeck ul > li:nth-child(4) {
+     grid-column: 6;
+   }
+
+   #legendDeck {
+  margin-top: 0.5em;
+   }
+
+   /* (Keep your existing size/padding rules for items 1–4) */
+   #legendDeck ul > li:nth-child(-n+4) {
+     height: 90px;
+     font-size: 2em;
+     font-weight: bold;
+     justify-self: center;
+     padding: 0.5em;
+   }
+   #legendDeck2 ul > li:nth-child(-n+6) {
+        height: 90px;
+        font-size: 1.25em;
+        font-weight: bold;
+        justify-self: center;
+        padding: 0.5em;
+   }
+      #controlDeck ul > li:nth-child(-n+5) {
+        height: 90px;
+        font-size: 1.25em;
+        font-weight: bold;
+        justify-self: center;
+        padding: 0.5em;
+   }
+  /* 1) Row 2 placement: each of items 5–10 goes into columns 2–7 */
+  #legendDeck2 ul > li:nth-child(1) {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  #legendDeck2 ul > li:nth-child(2) {
+    grid-row: 2;
+    grid-column: 3;
+  }
+  #legendDeck2 ul > li:nth-child(3) {
+    grid-row: 2;
+    grid-column: 4;
+  }
+  #legendDeck2 ul > li:nth-child(4) {
+    grid-row: 2;
+    grid-column: 5;
+  }
+  #legendDeck2 ul > li:nth-child(5) {
+    grid-row: 2;
+    grid-column: 6;
+  }
+  #legendDeck2 ul > li:nth-child(6) {
+    grid-row: 2;
+    grid-column: 7;
+  }
+
+
+  /* 2) Now give all six of those (5–10) the same size/padding.*/
+  #legendDeck2 ul > li:nth-child(n+6) {
+    height: 70px;
+    width: 100%;
+    padding: 0;
+  }
+   #legendDeck .card, #legendDeck2 .card, #controlDeck .card {
+     width: 100%; height: 70px; background:#444; color:#fff;
+     border-radius:8px; display:flex; justify-content:center;
+     align-items:center; text-align:center; cursor:pointer; box-shadow:2px 2px 2px #000;
+   }
+   #legendDeck2 .skyBg { background-color: deepskyblue; }
+   #legendDeck2 .skyBg .sky { color: #000; }
+   #legendDeck2 .outdoorsBg { background-color: lawngreen; }
+   #legendDeck2 .outdoorsBg .outdoors { color: #000; }
+   #legendDeck2 .drinksBg { background-color: deeppink; }
+   #legendDeck2 .drinksBg .drinks { color: #000; }
+   #legendDeck2 .colorsBg { background-color: mediumpurple; }
+   #legendDeck2 .colorsBg .colors { color: #000; }
+   #legendDeck2 .communityBg { background-color: orange;}
+   #legendDeck2 .communityBg .community { color: #000; }
+   #legendDeck2 .randomBg { background-image: linear-gradient(to right, deepskyblue, lawngreen, deeppink, mediumpurple, orange); color: #000; }
+/* use PNG icons for the four main buttons */
+#legendDeck .bingo,
+#legendDeck .f5,
+#legendDeck .block,
+#legendDeck .refresh {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* per-button images (files in img/) */
+#legendDeck .bingo   { background-image: url('img/Bingo.png'); }
+#legendDeck .f5      { background-image: url('img/Corners.png'); }
+#legendDeck .block   { background-image: url('img/Block.png'); }
+#legendDeck .refresh { background-image: url('img/Refresh.png'); }
+
+/* --- Bingo: hide text normally, show over PNG when disabled (✋ Blocked) --- */
+#bingoBtn p {
+  position: relative;
+  z-index: 1;
+  text-indent: -9999px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* when bingo is disabled (including holdUntil “✋ Blocked”), show label on top */
+#bingoBtn.disabled p {
+  text-indent: 0;
+  white-space: normal;
+  overflow: visible;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 4px #000, 0 0 8px #000;
+}
+
+/* Corners / Block / Refresh: always hide text, PNG only */
+#legendDeck .f5 p,
+#legendDeck .block p,
+#legendDeck .refresh p {
+  text-indent: -9999px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+    #blockBtn {
+      background-color: #000;
+      color: #fff;
+      transition: background-color 0.2s ease, filter 0.2s ease;
+    }
+
+    /* once the user has used their block, lighten it */
+#blockBtn.used {
+  cursor: default;
+}
+
+
+   #legendDeck2 .skyBg {
+    touch-action: manipulation;
+    }
+
+   /* Enforce main deck visibility */
+   #mainDeck { display:flex !important; }
+   /* Enlarge refresh emoji */
+   #refreshBtn p { font-size:3em; line-height:1; }
+
+   /* Hide control deck */
+   #controlDeck { display: none; margin-top:1em; }
+
+   /* Offscreen canvas */
+   #colorCanvas { display:none; }
+
+
+   /* ── Grid selector dropdown ─────────────────────────── */
+.grid-menu {
+  position: absolute; z-index: 10010; top: 64px; /* below buttons */
+  background: #2e3d49; border: 1px solid #fff; border-radius: 8px;
+  padding: .25em; display: none; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,.6);
+}
+.grid-menu button{
+  display:block; width:100%; text-align:left; background:transparent; color:#fff;
+  border:none; padding:.5em .75em; font-size:1.25em; cursor:pointer;
+}
+.grid-menu button:hover{ background: rgba(255,255,255,.1); }
+
+/* Square layouts switch #mainDeck to grid, keep centered; OG stays flex */
+#mainDeck.square {
+  display: grid !important;
+  grid-template-columns: repeat(var(--cols), 100px);
+  justify-content: center;
+  gap: 10px;
+  height: auto !important;
+}
+
+/* ── Leaderboard overlay ─────────────────────────────── */
+#lbOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 10015; /* above board, below chat (10020) */
+}
+
+/* header row inside leaderboard */
+#lbModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-bottom: 0.35em;
+}
+
+#lbModalHeader h2 {
+  margin: 0;
+}
+
+#lbCloseX {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.2em;
+  cursor: pointer;
+  line-height: 1;
+}
+
+
+   /* ── Leaderboard modal ─────────────────────────────── */
+#lbModal {
+  font-size: 1em;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #2e3d49; 
+  color: #fff;
+  padding: 15px 20px; 
+  border: 3px solid #444;
+  border-radius: 10px;
+  z-index: 10001;
+  max-height: 90%; /* increased from 80% */
+  max-width: 90%; /* add this line for width control */
+  width: 500px;    /* or choose any fixed width */
+  overflow: auto;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+}
+#lbModal h2   { margin-top: 0; }
+#lbModal table{ 
+    width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1em;
+  font-size: .9em;
+  overflow: hidden;
+  border-radius: 8px;
+ }
+
+#lbModal th {
+  border: 1px solid #666;
+  background: deeppink;
+  color: #fff;
+  padding: 0.75em 1em;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#lbModal td {
+  border: 1px solid #666;
+  background: rgba(255,255,255,0.05);
+  padding: 0.4em .5em;
+  text-align: center;
+  color: #eee;
+}
+
+#lbModal tr:nth-child(even) td {
+  background: rgba(255,255,255,0.1);
+}
+
+#lbClose {
+  background: mediumpurple;
+  color: #fff;
+  border: none;
+  padding: 0.5em 1em;
+  margin-top: 1.5em;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+/* ── tabs inside leaderboard ──────────────── */
+#lbTabs { margin-bottom: 12px; text-align: center; background: #1f2a33; border-radius: 6px; padding: 0.25em; }
+#lbTabs button {
+  background: transparent;
+  color: #ccc;
+  border: none;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+#lbTabs button:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+#lbTabs button.active {
+  background: linear-gradient(135deg, deepskyblue, lawngreen);
+  color: #000;
+}
+
+#lbClose:hover {
+  background: orange;
+}
+
+#lbModal .hidden { display:none; }
+
+/* LB All-Time “show more” button */
+#lbAll .more-wrap{ text-align:center; margin:.35em 0 .75em; }
+#lbAll .more-btn{
+  background:#1f2a33; border:1px solid #666; color:#fff;
+  border-radius:6px; padding:.35em .75em; cursor:pointer;
+}
+#lbAll .more-btn:hover{ background:#263542; }
+
+
+.wlCell { width: 60px; }
+.centerWrap {
+  visibility: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Optional: allow scrolling if content is too tall */
+  box-sizing: border-box;
+  transform-origin: top center;
+}
+
+#callersModal {
+  font-size: 1.5em;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fafafa;
+  color: #111;
+  padding: 30px 40px;
+  border: 3px solid #333;
+  border-radius: 10px;
+  z-index: 10001;
+  width: 800px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  box-shadow: 0 6px 12px #0006;
+}
+/* match the LB modal’s heading style */
+#callersModal h2 {
+  margin-top: 0;
+  font-size: 1.5em;    /* same as #lbModal h2 */
+}
+
+/* give the callers list the same padding & font as the LB table */
+#callersModal ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.25em;   /* same as #lbModal table text */
+}
+
+#closeCallers {
+  margin-top: 12px;    /* same as #lbClose */
+  padding: 10px 20px;   /* same as #lbClose */
+  font-size: 1.25em;      /* ensure it’s as big as your list text */
+  cursor: pointer;
+}
+
+/* if you want the little “W” buttons next to each caller to be big too: */
+#callersList button {
+  margin-left: 0.5em;
+  margin-bottom: 0.5em;
+  padding: 5px 10px;
+  font-size: 1.25em;
+}
+
+.card.blocked {
+  pointer-events: none !important;
+}
+
+/* 3) Constrain the blocked‐overlay to the button only */
+#bingoBtn.blocked {
+  position: relative;     /* establish a local stacking context */
+}
+#bingoBtn.blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+#blockBtn.blocked {
+  position: relative;     /* establish a local stacking context */
+}
+#blockBtn.blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+#cornersBtn.blocked {
+  position: relative;     /* establish a local stacking context */
+}
+#cornersBtn.blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+.card.disabled {
+  pointer-events: none !important;
+  opacity: .6;
+}
+
+/* Any real <button> element that is disabled gets the same faded look */
+button:disabled {
+  opacity: .6 !important;
+  cursor: default;
+}
+
+/* 3) Constrain the blocked‐overlay to the button only */
+#bingoBtn.disabled {
+  position: relative;     /* establish a local stacking context */
+}
+#bingoBtn.disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+#blockBtn.disabled {
+  position: relative;     /* establish a local stacking context */
+}
+#blockBtn.disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+#cornersBtn.disabled {
+  position: relative;     /* establish a local stacking context */
+}
+#cornersBtn.disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;               /* top/right/bottom/left: 0 */
+  background: rgba(255,255,255,0.6);
+  border-radius: inherit; /* match the button’s rounding */
+  pointer-events: none !important;   /* button.disabled already blocks clicks */
+  z-index: 1;
+}
+
+
+/* Ensure each LI uses flex so its .card child centers correctly */
+#legendDeck ul > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#legendDeck2 ul > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#controlDeck ul > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* 2) First row (BINGO, Corners, 🔄, LB) → items 1–4 */
+/*    • Make them larger (e.g. 120×120px) and bigger font */
+#legendDeck ul > li:nth-child(-n+4) {
+  width: 120px;
+  height: 120px;
+  font-size: 1.5em; /* increase text size */
+}
+
+/* Since .card inside LI is 100% of its parent, it will fill 120×120 */
+
+/* 3) Second row (Sky → Random) → items 5–10 */
+/*    • Keep the same size (100×70px) and default font */
+#legendDeck2 ul > li:nth-child(-n+6) {
+  width: 100px;
+  height: 70px;
+  font-size: 1em;
+  padding: 0;
+}
+/* ── FORCE TWO ROWS FOR #legendDeck ───────────────────────────────── */
+
+/* 1) Switch back to Grid with exactly two rows & six columns: */
+#legendDeck ul {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: repeat(6, 120px);
+  justify-content: center;
+  row-gap: 1em;      /* <--- controls vertical space between rows */
+  column-gap: 6em;   /* <--- controls horizontal space between columns */
+  margin-top: .5em;
+  padding: 0;
+  list-style: none;
+}
+#legendDeck2 ul {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: repeat(6, 120px);
+  justify-content: center;
+  row-gap: 1em;      /* <--- controls vertical space between rows */
+  column-gap: 1em;   /* <--- controls horizontal space between columns */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 2) First row (items 1–4, “BINGO | Corners | 🔄 | LB”)
+   • Make each 120×120px and place them in columns 2–5 (to center within a 6-column grid) */
+#legendDeck ul > li:nth-child(1) {
+  grid-row: 1;
+  grid-column: 2;
+  width: 200px;
+  height: 200px;
+  font-size: 3em;
+}
+#legendDeck ul > li:nth-child(2) {
+  grid-row: 1;
+  grid-column: 3;
+  width: 200px;
+  height: 200px;
+  font-size: 3em;
+}
+#legendDeck ul > li:nth-child(3) {
+  grid-row: 1;
+  grid-column: 4;
+  width: 200px;
+  height: 200px;
+  font-size: 3em;
+}
+#legendDeck ul > li:nth-child(4) {
+  grid-row: 1;
+  grid-column: 5;
+  width: 200px;
+  height: 200px;
+  font-size: 3em;
+}
+
+/* 3) Second row (items 5–10, “Sky → Random”)
+   • Each 100×70px, placed in columns 1–6 respectively, all on row 2 */
+#legendDeck2 ul > li:nth-child(1) {
+  grid-row: 2;
+  grid-column: 1;
+  width: 100px;
+  height: 70px;
+  font-size: 1.2em;
+}
+#legendDeck2 ul > li:nth-child(2) {
+  grid-row: 2;
+  grid-column: 2;
+  width: 100px;
+  height: 70px;
+  font-size: 1.1em;
+}
+#legendDeck2 ul > li:nth-child(3) {
+  grid-row: 2;
+  grid-column: 3;
+  width: 100px;
+  height: 70px;
+  font-size: 1.1em;
+}
+#legendDeck2 ul > li:nth-child(4) {
+  grid-row: 2;
+  grid-column: 4;
+  width: 100px;
+  height: 70px;
+  font-size: 1.1em;
+}
+#legendDeck2 ul > li:nth-child(5) {
+  grid-row: 2;
+  grid-column: 5;
+  width: 100px;
+  height: 70px;
+  font-size: 1.1em;
+}
+#legendDeck2 ul > li:nth-child(6) {
+  grid-row: 2;
+  grid-column: 6;
+  width: 100px;
+  height: 70px;
+  font-size: 1.1em;
+}
+
+/* 4) Make sure each <li> still centers its .card child */
+#legendDeck ul > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#legendDeck2 ul > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#controlDeck > li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#controlDeck ul {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: repeat(6, 120px);
+  justify-content: center;
+  row-gap: 1em;      /* <--- controls vertical space between rows */
+  column-gap: 1em;   /* <--- controls horizontal space between columns */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#controlDeck ul > li:nth-child(1) {
+  grid-row: 1;
+  grid-column: 1;
+  width: 120px;
+  height: 120px;
+  font-size: 1em;
+}
+#controlDeck ul > li:nth-child(2) {
+  grid-row: 1;
+  grid-column: 2;
+  width: 120px;
+  height: 120px;
+  font-size: 1em;
+}
+#controlDeck ul > li:nth-child(3) {
+  grid-row: 1;
+  grid-column: 3;
+  width: 120px;
+  height: 120px;
+  font-size: 1em;
+}
+#controlDeck ul > li:nth-child(4) {
+  grid-row: 1;
+  grid-column: 4;
+  width: 120px;
+  height: 120px;
+  font-size: 1em;
+}
+#controlDeck ul > li:nth-child(5) {
+  grid-row: 1;
+  grid-column: 5;
+  width: 120px;
+  height: 120px;
+  font-size: 1em;
+}
+
+  /* … all your other rules … */
+
+  #legendDeck2 {
+    margin-bottom: 0;
+  }
+
+  /* ───── flatten legend2 spacing ───── */
+  /* 1) Kill the bottom gap on the first legend row */
+  #legendDeck {
+    margin-bottom: 0;    /* overrides .deck2’s 1em bottom margin */
+    padding-bottom: 0;   /* removes the 10px bottom padding */
+  }
+
+  /* 2) Kill the top gap on the second legend row */
+  #legendDeck2 {
+    margin-top: 0;       /* override any inherited top margin */
+    padding-top: 0;      /* removes the 5px top padding you set */
+    /* margin-bottom:0 is already there */
+  }
+
+  /* ── horizontal divider between legends ── */
+hr.legend-divider {
+  width: 100%;            /* span full deck width */
+  max-width: 968px;       /* same max as your .deck/.deck2 */
+  margin: 0.5em auto;     /* vertical breathing room */
+  border: none;
+  border-top: 1px solid rgba(255,255,255,01); /* subtle white line */
+}
+
+
+/* ── Continuous gold glow + background flow ───────────────── */
+.win-glow {
+  position: relative;
+  /* gold border + outer/inset glow */
+  border: 5px solid #FFD700;
+  box-shadow:
+    0 0 8px #FFD700,
+    inset 0 0 4px #FFD700;
+  /* two simultaneous animations:
+     1) glowWave runs back-and-forth linearly
+     2) bgFlow shuffles a subtle gold gradient behind text */
+  animation:
+    glowWave 2s infinite linear alternate,
+    bgFlow   6s infinite linear;
+  /* gradient “wash” behind the card’s content */
+  background-image: linear-gradient(
+    270deg,
+    rgba(255,215,0,0.2) 0%,
+    rgba(255,215,0,0.05) 50%,
+    rgba(255,215,0,0.2) 100%
+  );
+  background-size: 400% 400%;
+}
+
+/* smooth, back-and-forth glow */
+@keyframes glowWave {
+  from {
+    box-shadow:
+      0 0 8px #FFD700,
+      inset 0 0 4px #FFD700;
+  }
+  to {
+    box-shadow:
+      0 0 16px #FFD700,
+      inset 0 0 8px #FFD700;
+  }
+}
+
+/* drifting background wash */
+@keyframes bgFlow {
+  from { background-position:   0% 50%; }
+  to   { background-position: 100% 50%; }
+}
+
+/* ── text pulse inside win‐glow tiles ───────────────── */
+.win-glow p {
+  /* keep it centered and prevent overflow */
+  display: inline-block;
+  backface-visibility: hidden;
+  /* animate scale + brightness */
+  animation: textPulse 1.5s infinite ease-in-out alternate;
+}
+
+@keyframes textPulse {
+  from {
+    transform: scale(1);
+    filter: brightness(100%);
+  }
+  to {
+    transform: scale(1.5);
+    filter: brightness(140%);
+  }
+}
+
+/* 1) Smooth out transforms & colors */
+.card {
+  transition:
+    transform 0.1s ease-out,
+    box-shadow 0.1s ease-out,
+    background-color 0.1s ease-out;
+}
+
+/* 2) Strong, unmistakable “pressed” look */
+.card:active {
+  transform: scale(0.9) translateY(2px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  background-color: rgba(255,255,255,0.2);
+}
+
+.card,
+button {
+  transition: transform 0.1s ease-out,
+              box-shadow 0.1s ease-out,
+              background-color 0.1s ease-out;
+}
+
+/* the same look you have on :active */
+.pressed {
+  transform: scale(0.85) translateY(2px) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6) !important;
+  background-color: rgba(255,255,255,0.2) !important;
+}
+
+/* 3) (Optional) Flashy ripple on press */
+@keyframes pressFlash {
+  0%   { background-color: rgba(255,255,255,0.2); }
+  50%  { background-color: rgba(255,255,255,0.6); }
+  100% { background-color: rgba(255,255,255,0.2); }
+}
+
+
+/* target only the 🔄 tile on the main board */
+#mainDeck .card[data-wildcard] p {
+  font-size: 2.5em;    /* make the emoji bigger */
+  line-height: 1;      /* keep it centered vertically */
+}
+
+/* ───────── CHAT UI ───────── */
+#chatOverlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 10020;
+}
+
+#chatWindow {
+  width: min(420px, 90vw);
+  height: 60vh;
+  max-height: 80vh;
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.75);
+  display: flex;
+  flex-direction: column;
+  resize: both;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* themes */
+#chatWindow.chat-dark {
+  background: #0f141a;
+  color: #f9fafb;
+}
+
+#chatWindow.chat-light {
+  background: #f5f5f7;
+  color: #111827;
+}
+
+#chatWindow.chat-dark .chat-header {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  border-bottom: 1px solid #111827;
+}
+
+#chatWindow.chat-light .chat-header {
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4em 0.75em;
+  font-size: 1em;
+}
+
+.chat-title {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.chat-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.chat-header button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.2em;
+  line-height: 1;
+  padding: 0.1em 0.25em;
+}
+
+#chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5em 0.75em 0.75em;
+  font-size: 0.9em;
+}
+
+/* scrollbars subtle */
+#chatMessages::-webkit-scrollbar {
+  width: 6px;
+}
+#chatMessages::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.8);
+  border-radius: 999px;
+}
+
+.chat-date-divider {
+  text-align: center;
+  margin: 0.5em 0;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.chat-message {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: flex-end;
+  column-gap: 0.4em;
+  row-gap: 0.15em;
+  margin-bottom: 0.35em;
+  word-break: break-word;
+}
+
+.chat-username {
+  font-weight: 700;
+}
+
+.chat-text {
+  font-size: 0.95em;
+}
+
+.chat-timestamp {
+  font-size: 0.7em;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+/* messages layout: name + text on first line, timestamp right */
+.chat-message .chat-username {
+  grid-column: 1;
+}
+.chat-message .chat-text {
+  grid-column: 2;
+}
+.chat-message .chat-timestamp {
+  grid-column: 3;
+}
+
+/* image / gif preview */
+.chat-image {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 0.2em;
+}
+
+/* input row */
+.chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  padding: 0.45em 0.75em 0.6em;
+  gap: 0.4em;
+  border-top: 1px solid rgba(148,163,184,0.3);
+}
+
+#chatInput {
+  flex: 1;
+  resize: none;
+  min-height: 2em;
+  max-height: 7em;
+  padding: 0.4em 0.45em;
+  border-radius: 8px;
+  border: 1px solid rgba(148,163,184,0.7);
+  font-family: inherit;
+  font-size: 1rem;  /* ≥16px to stop mobile zooming */
+  outline: none;
+}
+
+#chatWindow.chat-dark #chatInput {
+  background: #020617;
+  color: #f9fafb;
+}
+
+#chatWindow.chat-light #chatInput {
+  background: #ffffff;
+  color: #111827;
+}
+
+#chatSend {
+  flex: 0 0 auto;
+  width: 2.4em;
+  height: 2.4em;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* send button colors by theme */
+#chatWindow.chat-dark #chatSend {
+  background: #22c55e;
+  color: #022c22;
+}
+#chatWindow.chat-light #chatSend {
+  background: #16a34a;
+  color: #ecfdf5;
+}
+
+#chatWindow.chat-dark #chatSend:hover {
+  filter: brightness(1.1);
+}
+#chatWindow.chat-light #chatSend:hover {
+  filter: brightness(1.1);
+}
+
+/* chat unread dot on 💬 icon */
+.chat-unseen-dot {
+  position: absolute;
+  top: 0.1em;
+  right: 0.1em;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px #000;
+  display: none;
+}
+
+/* MIC button visual states + green flicker overlay */
+#micBtn {
+  position: relative;
+}
+
+/* solid "on" state */
+#micBtn.mic-on {
+  opacity: 1 !important;
+}
+
+/* base overlay */
+#micBtn::after {
+  content: '';
+  position: absolute;
+  inset: -0.15em;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 0 rgba(0,255,0,0);
+  transition: opacity 0.08s linear, box-shadow 0.08s linear;
+}
+
+/* low level talking */
+#micBtn.talking-soft::after {
+  opacity: 0.5;
+  box-shadow: 0 0 10px rgba(0,255,0,0.5);
+}
+
+/* medium level talking */
+#micBtn.talking-med::after {
+  opacity: 0.8;
+  box-shadow: 0 0 18px rgba(0,255,0,0.8);
+}
+
+/* loud talking */
+#micBtn.talking-loud::after {
+  opacity: 1;
+  box-shadow: 0 0 26px rgba(0,255,0,1);
+}
+
+
+/* Mobile portrait: keep board centered, move chat toward top, shorter & wider */
+@media (max-width: 992px) and (orientation: portrait) {
+  #chatOverlay {
+    align-items: flex-start;   /* from middle to top */
+    justify-content: center;
+    padding-top: 8vh;          /* push chat down a bit from very top */
+  }
+
+  #chatWindow {
+    width: 85vw;               /* a bit wider */
+    height: 30vh;              /* about half-screen height */
+    max-height: 40vh;
+    border-radius: 16px;
+  }
+
+  #chatMessages {
+    font-size: 1.75rem;           /* slightly larger text */
+  }
+
+  .chat-text {
+    font-size: 2rem;
+  }
+
+  #chatInput {
+    font-size: 2.5rem;           /* reinforce anti-zoom here as well */
+  }
+
+  #chatSend {
+  font-size: 2em;
+}
+
+.chat-header {
+  padding: 0.4em 0.75em;
+  font-size: 1.5em;
+}
+
+.chat-header button {
+  font-size: 1.5em;
+  line-height: 1;
+  padding: 0.1em 0.25em;
+}
+
+}
+
+
+
+/* NEW CENTERED RESPONSIVE SCALING */
+@media (min-width: 768px) {
+  .centerWrap {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin: 0 auto;
+    padding: 20px 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .centerWrap {
+    transform: scale(0.75);
+    padding: 30px 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .centerWrap {
+    transform: scale(0.65);
+    padding: 40px 0;
+  }
+}
+
+  /* Adjust font sizes proportionally */
+  #usernameSection > p {
+    font-size: clamp(3em, 5vw, 4em) !important;
+  }
+
+  #legendDeck ul > li:nth-child(-n+4) {
+    font-size: clamp(1.5em, 2.5vw, 2.5em) !important;
+  }
+
+
+  #controlDeck ul > li:nth-child(-n+5) {
+    font-size: clamp(1em, 2.5vw, 1.5em) !important;
+  }
+
+  /* Optimize spacing */
+  .legend-divider {
+    margin: 0.5em auto !important;
+  }
+
+  #announcement {
+    font-size: clamp(1em, 4vw, 2.25em) !important;
+    margin: 0.5em !important;
+  }
+
+
+  /* mobile */
+@media (max-width: 767px) {
+  /* Increase base font sizes */
+  #usernameInput,
+  #usernameSubmit {
+    font-size: 1.8em !important; /* Increased from 2.15em/2em */
+  }
+  
+  .deck .card {
+    font-size: 1.8em !important;
+    /* keep square: */
+    height: 0 !important;
+    padding-bottom: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* Increase button sizes in legends */
+  #legendDeck ul > li:nth-child(-n+4) {
+    width: 140px !important; /* Increased from 120px */
+    height: 140px !important;
+  }
+  
+  #legendDeck2 ul > li:nth-child(-n+6) {
+    width: 110px !important; /* Increased from 100px */
+    height: 80px !important; /* Increased from 70px */
+  }
+  
+  /* Increase font sizes in legends */
+  #legendDeck ul > li:nth-child(-n+4),
+  #controlDeck ul > li:nth-child(-n+5) {
+    font-size: 1.4em !important; /* Increased from 1.2em */
+  }
+  
+  /* Adjust grid spacing */
+  #legendDeck ul,
+  #legendDeck2 ul {
+    column-gap: 1.5em !important; /* Increased from 1em */
+  }
+  
+  /* Increase announcement size */
+  #announcement {
+    font-size: 1.5em !important; /* Increased from 2em */
+  }
+  
+  /* Add more top padding */
+  .centerWrap {
+    padding-top: 40px !important; /* Increased from 20px */
+  }
+}
+
+
+</style>
+</head>
+<body>
+
+  <!-- PROTECTED APP AREA (hidden until gate passes) -->
+  <div id="protectedArea" class="hidden">
+    <img src="RF5.png" alt="Fre5h Logo" class="brand-logo">
+    <div id="appRoot" class="container">
+  <!-- BEGIN: The Refresh Bingo app -->
+
+  <div class="centerWrap">
+    <!-- Username Entry -->
+<section id="usernameSection">
+  <div class="card lb"      id="lbBtn"><p>Leader Board</p></div>
+  <div class="username-row">
+    <input
+      type="text"
+      id="usernameInput"
+      placeholder="Enter Discord Username"
+    >
+    <button id="usernameSubmit">Submit</button>
+  </div>
+  <div id="usernameMessage"></div>
+</section>
+    <div id="node">
+      <section>
+        <ul id="mainDeck" class="deck"></ul>
+      </section>
+      <canvas id="colorCanvas"></canvas>
+    </div>
+            
+    <section>
+        <div id="announcement" style="text-align:center; font-size:52px; font-weight: bolder; margin-top:1em;"></div>
+</section>
+    <section class="deck2" id="legendDeck">
+      <ul>
+        <!-- row 1: game calls + LB -->
+        <li class="card bingo"   id="bingoBtn" role="button" tabindex="0"><p class="bingoText">BINGO</p></li>
+        <li class="card f5"      id="cornersBtn" role="button" tabindex="0"><p class="bingoText">Corners</p></li>
+        <li class="card block" id="blockBtn" role="button" tabindex="0"><p>Block</p></li>
+        <li class="card refresh" id="refreshBtn" role="button" tabindex="0"><p>🔄</p></li>
+        </ul>
+    </section>
+<hr class="legend-divider">
+        <section class="deck2" id="legendDeck2">
+      <ul>
+        <!-- row 2: all legend categories -->
+        <li class="card skyBg"><p class="sky">Sky</p></li>
+        <li class="card outdoorsBg"><p class="outdoors">Outdoors</p></li>
+        <li class="card drinksBg"><p class="drinks">Drinks</p></li>
+        <li class="card colorsBg"><p class="colors">Colors</p></li>
+        <li class="card communityBg"><p class="community">Community Picked</p></li>
+        <li class="card randomBg"><p class="random">Random</p></li>
+      </ul>
+    </section>
+
+    <!-- Controls: Start/Pause/Restart -->
+    <section class="deck2" id="controlDeck">
+      <ul>
+        <li class="card control" id="startBtn"><p>Start</p></li>
+        <li class="card control" id="pauseBtn"><p>Pause</p></li>
+        <li class="card control" id="restartBtn"><p>Restart</p></li>
+        <li class="card control" id="masterResetBtn"><p>MR</p></li>
+        <li class="card control" id="callersBtn"><p>Callers</p></li>
+        <li class="card control" style="visibility:hidden;"></li>
+        <li class="card control" style="visibility:hidden;"></li>
+        <li class="card control" style="visibility:hidden;"></li>
+        <li class="card control" style="visibility:hidden;"></li>
+      </ul>
+    </section>
+
+    <!-- Callers Modal -->
+    <div id="callersModal" style="display:none;">
+      <h2>Who Called Bingo?</h2>
+      <ul id="callersList" style="list-style:none; padding:0;"></ul>
+      <button id="closeCallers">Close</button>
+    </div>
+</div>
+    <script src="dom-to-image.js"></script>
+    <script>
+      let audioEnabled = false;
+      let micEnabled = false;
+      let micMuted = false; 
+      let micStream = null;
+      let micAudioCtx = null;
+      let micAnalyser = null;
+      let micDataArray = null;
+      let micRafId = null;
+      let micSourceNode = null;
+
+async function toggleMic(btn) {
+  // CASE 1: No active stream yet → FULL ON (same as your current "TURNING MIC ON")
+  if (!micEnabled || !micStream) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
+
+      micStream  = stream;
+      micEnabled = true;
+      micMuted   = false;
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🎙';     // live mic
+        btn.style.opacity = '1';
+        btn.classList.add('mic-on');
+        btn.classList.remove('talking-soft', 'talking-med', 'talking-loud');
+      }
+
+      // start local audio level meter for green flicker
+      startMicLevelMeter(stream, btn);
+
+      // send to peers (WebRTC)
+      if (window.Voice && typeof Voice.setMicStream === 'function') {
+        Voice.setMicStream(stream);
+      }
+
+    } catch (err) {
+      console.error('getUserMedia failed:', err);
+      micEnabled = false;
+      micMuted   = false;
+      micStream  = null;
+      if (btn) {
+        btn.classList.remove('mic-on', 'talking-soft', 'talking-med', 'talking-loud');
+        btn.textContent = '🎙';
+        btn.style.opacity = '0.3';
+      }
+    }
+    return;
+  }
+
+  // CASE 2: We already HAVE a stream → just MUTE / UNMUTE tracks
+  micMuted = !micMuted;
+
+  // safety: if somehow stream vanished, fall back to fully off visuals
+  if (!micStream) {
+    micEnabled = false;
+    micMuted   = false;
+    if (btn) {
+      btn.classList.remove('mic-on', 'talking-soft', 'talking-med', 'talking-loud');
+      btn.textContent = '🎙';
+      btn.style.opacity = '0.3';
+    }
+    return;
+  }
+
+  // enable / disable audio tracks but KEEP the connection alive
+  micStream.getAudioTracks().forEach(t => {
+    t.enabled = !micMuted;
+  });
+
+  if (micMuted) {
+    // Muted: stop meter and show "mic off" icon
+    stopMicLevelMeter();
+    if (btn) {
+      btn.classList.remove('talking-soft', 'talking-med', 'talking-loud');
+      // mic with "no" sign – closest we get to circle+slash
+      btn.textContent = '🚫';
+      btn.style.opacity = '0.5';
+    }
+  } else {
+    // Unmuted: restart meter and go back to normal mic
+    startMicLevelMeter(micStream, btn);
+    if (btn) {
+      btn.textContent = '🎙';
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+
+function startMicLevelMeter(stream, btn) {
+  if (!btn) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+
+  if (!micAudioCtx) {
+    micAudioCtx = new AC();
+  }
+
+  // needed on mobile (incl. Android) – resume context on user gesture
+  if (micAudioCtx.state === 'suspended') {
+    micAudioCtx.resume().catch(() => {});
+  }
+
+  // clean any old nodes
+  if (micSourceNode) {
+    micSourceNode.disconnect();
+    micSourceNode = null;
+  }
+  if (micAnalyser) {
+    micAnalyser.disconnect();
+    micAnalyser = null;
+  }
+  if (micRafId) {
+    cancelAnimationFrame(micRafId);
+    micRafId = null;
+  }
+
+  micSourceNode = micAudioCtx.createMediaStreamSource(stream);
+  micAnalyser = micAudioCtx.createAnalyser();
+  micAnalyser.fftSize = 256;
+  micSourceNode.connect(micAnalyser);
+
+  micDataArray = new Uint8Array(micAnalyser.fftSize);
+
+  const update = () => {
+    if (!micEnabled || !micAnalyser) {
+      btn.classList.remove('talking-soft', 'talking-med', 'talking-loud');
+      return;
+    }
+
+    micAnalyser.getByteTimeDomainData(micDataArray);
+    let sum = 0;
+    for (let i = 0; i < micDataArray.length; i++) {
+      const v = (micDataArray[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / micDataArray.length); // ~0..1
+
+    // map volume to flicker intensity
+    btn.classList.remove('talking-soft', 'talking-med', 'talking-loud');
+    const threshold = 0.02; // ignore very low noise
+    if (rms > threshold) {
+      if (rms < 0.06) {
+        btn.classList.add('talking-soft');
+      } else if (rms < 0.12) {
+        btn.classList.add('talking-med');
+      } else {
+        btn.classList.add('talking-loud');
+      }
+    }
+
+    micRafId = requestAnimationFrame(update);
+  };
+
+  update();
+}
+
+function stopMicLevelMeter() {
+  if (micRafId) {
+    cancelAnimationFrame(micRafId);
+    micRafId = null;
+  }
+  if (micSourceNode) {
+    micSourceNode.disconnect();
+    micSourceNode = null;
+  }
+  if (micAnalyser) {
+    micAnalyser.disconnect();
+    micAnalyser = null;
+  }
+
+  const btn = document.getElementById('micBtn');
+  if (btn) {
+    btn.classList.remove('talking-soft', 'talking-med', 'talking-loud');
+  }
+}
+
+
+      window.addEventListener('beforeunload', () => {
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+      });
+
+
+      // Force mic fully OFF and reset the button (used when user isn't signed in)
+function forceMicOff() {
+  // stop any active stream locally
+  if (micStream) {
+    micStream.getTracks().forEach(t => t.stop());
+  }
+
+  // tell Voice module to drop audio to peers
+  if (window.Voice && typeof Voice.clearMicStream === 'function') {
+    Voice.clearMicStream();
+  }
+
+  micStream = null;
+  micEnabled = false;
+  micMuted   = false;
+
+  stopMicLevelMeter();
+
+  const btn = document.getElementById('micBtn');
+  if (btn) {
+    btn.classList.remove('mic-on', 'talking-soft', 'talking-med', 'talking-loud');
+    btn.textContent = '🎙';
+    btn.style.opacity = '0.3';
+    btn.disabled = true;
+    btn.style.cursor = 'default';
+  }
+}
+
+
+
+      // --- Globals and Data ---
+      const bingoSounds = [
+        'fx/bingo1.mp3',
+        'fx/bingo2.mp3',
+        'fx/bingo3.mp3',
+        'fx/bingo4.mp3',
+        'fx/bingo5.mp3',
+        'fx/bingo6.mp3',
+      ];
+      const cornersSounds = [
+      'fx/corners1.mp3',
+      'fx/corners2.mp3',
+      'fx/corners3.mp3',
+      'fx/corners4.mp3',
+      'fx/corners5.mp3'
+      ];
+      const winSounds = [
+      'fx/win1.mp3',
+      'fx/win2.mp3',
+      'fx/win3.mp3',
+      'fx/win4.mp3'
+      ];
+
+      // Preload Audio objects so every tab has them ready:
+    const preloadedWinAudios = winSounds.map(url => {
+      const a = new Audio(url);
+      a.preload = 'auto';
+      return a;
+    });
+
+    const preloadedBingoAudios = bingoSounds.map(src => Object.assign(new Audio(src), { preload:'auto' }));
+    let lastBingoSoundIdx = null;
+
+    const preloadedCornersAudios = cornersSounds.map(src =>
+      Object.assign(new Audio(src), { preload: 'auto' })
+    );
+    let lastCornerSoundIdx = null;
+
+
+    // Track which announcement we've already shown:
+    let lastAnnounceTs = 0;
+    let prevCalled = [];
+
+
+      // build Audio objects once so they’re cached
+      const _winAudio = winSounds.map(src => Object.assign(new Audio(src), { preload: 'auto' }));
+      const _bingoAudio = bingoSounds.map(src => Object.assign(new Audio(src), { preload: 'auto' }));
+      const _cornersAudio = cornersSounds.map(src => Object.assign(new Audio(src), { preload: 'auto' }));
+
+        /*
+      @param {'bingo'|'corners'} type 
+     */
+ function playSound(type) {
+   // pick a random preloaded audio
+   const arr = type==='bingo'
+     ? preloadedBingoAudios
+     : preloadedCornersAudios;
+   const idx = Math.floor(Math.random()*arr.length);
+   tryPlay(arr[idx]);
+ }
+
+
+ function playWinSound() {
+   const idx = Math.floor(Math.random()*preloadedWinAudios.length);
+   tryPlay(preloadedWinAudios[idx]);
+ }
+
+
+    function tryPlay(audio) {
+      if (!audioEnabled) return;
+      audio.currentTime = 0;
+      audio.play().catch(()=>{});
+    }
+
+      const BACKGROUND_IMAGE = "img/5prize.png";
+
+      function stopTicker() {
+      if (selectionInterval) {
+        clearInterval(selectionInterval);
+        selectionInterval = null;
+      }
+      isKicking = false;
+    }
+
+
+// === WebRTC TURN/STUN config for mic audio ===
+const host = window.location.hostname;
+
+const ICE_SERVERS = {
+  iceServers: [
+    { urls: `stun:${host}:3478` },
+    { urls: `turn:${host}:3478`, username: 'demo', credential: 'turnpass' },
+    { urls: 'stun:66.176.182.171:3478' },
+    { urls: 'turn:66.176.182.171:3478?transport=udp', username: 'demo', credential: 'turnpass' },
+    { urls: 'turn:66.176.182.171:3478?transport=tcp', username: 'demo', credential: 'turnpass' }
+  ],
+  iceTransportPolicy: 'all'
+};
+
+
+
+      let username = '';
+      let selectionInterval = null;
+      const TITLE_SELECTION_INTERVAL = 4500;
+
+
+
+      /* ── Grid state ─────────────────────────────────────── */
+const GRID = {
+  mode: localStorage.getItem('gridMode') || 'OG', // 'OG' or 'N×N' like '7x7'
+  size: 9,   // per-row
+  rows: 6    // rows (OG)
+};
+syncGridSpecFromMode();
+
+function setGridMode(mode){  // mode: 'OG' or '5x5'...'10x10'
+  GRID.mode = mode;
+  localStorage.setItem('gridMode', mode);
+  syncGridSpecFromMode();
+  renderDeck(); // rebuild board for new layout
+}
+
+function syncGridSpecFromMode(){
+  if (GRID.mode === 'OG') { GRID.size = 9; GRID.rows = 6; return; }
+  const m = GRID.mode.toLowerCase().match(/^(\d+)x\1$/);
+  if (m){ const n = parseInt(m[1],10); GRID.size = n; GRID.rows = n; }
+}
+
+function isSquareMode(){ return GRID.mode !== 'OG'; }
+function currentPR(){ return GRID.size; }     // perRow
+function currentRows(){ return GRID.rows; }   // rows
+
+
+function kickTicker() {
+  // do not run ticker if game is over
+if ((gameTrack?.gameState?.bingos ?? 0) >= 2) return;
+
+const ctrlDeck = document.getElementById('controlDeck');
+const hostIsVisible = getComputedStyle(ctrlDeck).display === 'block';
+
+// Allow *any* tab to drive if no host is visible.
+// Server enforces a 1.5s throttle (lastTitleCallTs), so duplicates are harmless.
+if (!hostIsVisible) {
+  // continue instead of returning
+}
+
+
+      // interval check
+      if (selectionInterval) return;
+
+      // --- Add Lock ---
+      if (isKicking) return; // If already kicking, abort
+      isKicking = true;      // Set lock
+
+// fire one title immediately
+      fetch('update_game_track.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=callTitle'
+      })
+      .then(() => {
+         fetchGameTrack(); // Fetch state *after* title call
+      })
+      .catch(error => { // <-- ADD THIS CATCH BLOCK
+         console.error("kickTicker initial callTitle failed:", error);
+         // Optional: Attempt to fetch state anyway to see if server recovered
+         fetchGameTrack();
+      })
+      .finally(() => {
+         isKicking = false; // --- Release Lock ---
+      });
+
+      // then keep calling on the normal cadence
+      selectionInterval = setInterval(() => {
+        // Optional: Add lock check inside interval too for robustness
+        if (isKicking) return;
+        isKicking = true; // Set lock for interval fetch
+
+        fetch('update_game_track.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'action=callTitle'
+        })
+        .then(() => {
+          fetchGameTrack();
+        })
+        .finally(() => {
+          isKicking = false; // --- Release Lock ---
+        });
+      }, TITLE_SELECTION_INTERVAL);
+    }
+
+      let gameTrack = null;
+      let connectionArray = {}, idArray = [];
+      let currentCallType = '';
+      let horizontalClaimed = false, verticalClaimed = false;
+      let cornersCalled = false;
+      let horizontalWinner = '', verticalWinner = '';
+      let cornersWinner = '';
+      let lastServerState = '';
+      let bingoWindowExpired = false;
+      let cornersWindowExpired = false;
+      let sIn = 'no';
+      window._hasAnnounced = false;
+      let lastCallersTs = 0;
+      let isKicking = false;
+
+      // ─── Winner-only highlight helpers (visual only) ───────────────────────────
+      function winnerByType(type) {
+        if (!gameTrack || !Array.isArray(gameTrack.winners)) return null;
+        const w = gameTrack.winners.find(w => w && w.type === type);
+        return w ? w.username : null;
+      }
+      function typeIsTaken(type) {
+        if (!gameTrack) return false;
+        if (type === 'corners') return (gameTrack.gameState?.corners ?? 0) >= 1;
+        return Array.isArray(gameTrack.bingoTypes) && gameTrack.bingoTypes.includes(type);
+      }
+      function userIsWinnerFor(type) {
+        const me = localStorage.getItem('username') || '';
+        return me && me === winnerByType(type);
+      }
+
+// Decide how to highlight THIS type for THIS user.
+// returns: true (normal), 'winner' (winner-only persistent), or false (no highlight)
+function highlightModeFor(type) {
+  const me = localStorage.getItem('username') || '';
+  const winners = Array.isArray(gameTrack?.winners) ? gameTrack.winners : [];
+  const bingoTypesTaken = new Set(gameTrack?.bingoTypes || []);
+  const cornersTaken    = (gameTrack?.gameState?.corners ?? 0) >= 1;
+  const bingosCount     = (gameTrack?.gameState?.bingos  ?? 0);
+
+  const didWin = (t) => winners.some(w =>
+    w.username === me && (
+      w.type === t ||
+      (t === 'horizontal' && w.type === 'both') ||
+      (t === 'vertical'   && w.type === 'both')
+    )
+  );
+
+  // Corners: keep visible to everyone until it's actually TAKEN.
+  if (type === 'corners') {
+    if (!cornersTaken) return true;            // available for all
+    return didWin('corners') ? 'winner' : false; // after taken, only the winner keeps it
+  }
+
+  // Bingo lines
+  const typeTaken = bingoTypesTaken.has('both') || bingoTypesTaken.has(type);
+
+  if (!typeTaken && bingosCount < 2) {
+    return true;                                // still available → show to everyone
+  }
+  // Once taken, only that type's winner keeps it
+  return didWin(type) ? 'winner' : false;
+}
+
+function renderHighlights() {
+  // clear old glow
+  document.querySelectorAll('#mainDeck .win-glow')
+    .forEach(el => el.classList.remove('win-glow'));
+
+  // which types are locally available on THIS board right now?
+  const available = {
+    horizontal: hasHorizontal(),
+    vertical:   hasVertical(),
+    corners:    hasCorners()
+  };
+
+  // apply each type independently under gating
+(['horizontal','vertical','corners']).forEach(t => {
+  const mode = highlightModeFor(t);
+  if (mode && available[t]) {
+    highlightPattern(t, { 
+      winnerOnly: (mode === 'winner'),
+      append: true      // ⬅️ key change: add instead of clear
+    });
+  }
+});
+}
+
+      // ─── Re-apply winner-only highlights on top (visual-only, persistent) ───
+      function applyWinnerPersistentHighlights() {
+        if (!gameTrack || !Array.isArray(gameTrack.winners)) return;
+
+        const me = localStorage.getItem('username') || '';
+        if (!me) return;
+
+        // For each type the user has already won this game, re-apply a single-line glow.
+        const myWins = (gameTrack.winners || []).filter(w => w && w.username === me);
+        // Order doesn’t matter; we re-apply after base highlights so they stick.
+myWins.forEach(w => {
+  const t = w.type;
+  if (t === 'both') {
+    highlightPattern('both', { winnerOnly: true, append: true });   // ⬅️
+  } else {
+    highlightPattern(t,       { winnerOnly: true, append: true });   // ⬅️
+  }
+});
+      }
+
+      // convenience
+      function clearPatternGlow() {
+        document.querySelectorAll('#mainDeck .win-glow')
+          .forEach(el => el.classList.remove('win-glow'));
+      }
+
+      // determining phase flags
+window._determiningShown = false;
+window._determineUntil   = 0;
+
+function showDeterminingBanner() {
+  if (window._determiningShown) return;
+  if (!canTouchAnnouncements()) return; // don't override a locked win
+  window._determiningShown = true;
+  announce1(`<div class="alert-message">⏳ Determining winners…</div>`);
+  disableAllButtons();
+}
+
+
+// ---- Winner announcement lock (UI only) ----
+let ANNOUNCE_LOCK_UNTIL = 0;
+
+function lockAnnouncements(ms = 5200) {
+  const until = Date.now() + ms;
+  ANNOUNCE_LOCK_UNTIL = Math.max(ANNOUNCE_LOCK_UNTIL, until);
+}
+
+function canTouchAnnouncements() {
+  return Date.now() >= ANNOUNCE_LOCK_UNTIL;
+}
+
+
+
+function willThisWindowFinish(track, winnersArr) {
+  const taken = new Set(track?.bingoTypes || []);
+  if (taken.has('both') || winnersArr.some(w => w?.type === 'both')) return true;
+  let h = taken.has('horizontal'), v = taken.has('vertical');
+  winnersArr.forEach(w => { if (!w) return; if (w.type === 'horizontal') h = true; if (w.type === 'vertical') v = true; });
+  return h && v;
+}
+
+
+    // ─── DOMContentLoaded Setup ───
+      window.addEventListener('DOMContentLoaded', () => {
+
+        // Set body background via JS
+        document.body.style.background = `#b53544 url("${BACKGROUND_IMAGE}") center/cover no-repeat fixed`;
+        fetchGameTrack();
+
+                const usernameSection = document.getElementById('usernameSection');
+
+                      // If we already have a stored username, ask for confirmation
+              const stored = localStorage.getItem('username');
+              if (stored) {
+                // hide the normal input row
+                const inputRow = document.querySelector('#usernameSection .username-row');
+                inputRow.style.display = 'none';
+                // build the confirm prompt
+                const confirm = document.createElement('div');
+                confirm.id = 'usernameConfirm';
+                confirm.className = 'username-row';
+                confirm.innerHTML = `
+                  <span>Are you “${stored}”?</span>
+                  <button id="usernameConfirmYes">THAT'S ME!</button>
+                  <a href="#" id="usernameConfirmNo" style="margin-left:1em;font-size:0.75em;">Not me!</a>
+                `;
+                usernameSection.insertBefore(confirm, document.getElementById('usernameMessage'));
+                // YES → join with stored name
+                document.getElementById('usernameConfirmYes')
+                        .addEventListener('click', () => {
+                         joinUser(stored);
+                         Voice.init(stored);
+                         sIn = 'yes';
+                         signIn();
+                  });
+                // NO → remove prompt, show input
+                document.getElementById('usernameConfirmNo')
+                  .addEventListener('click', e => {
+                    e.preventDefault();
+                    // treat this as a real sign-out
+                    localStorage.removeItem('username');
+                    sIn = 'no';
+
+                                        // hide admin-only # button
+                    if (gridBtn) {
+                      gridBtn.hidden = true;
+                    }
+
+                    // remove the confirm row, show the input again
+                    confirm.remove();
+                    inputRow.style.display = '';
+
+                    // hard-disable mic & update UI for "not signed in"
+                    forceMicOff();
+                    signIn();
+                  });
+
+              }
+
+
+
+            //Persist the given username, tell server, and update the UI.
+            function joinUser(name) {
+              username = name;
+              localStorage.setItem('username', username);
+
+                            // show # layout button only for admin
+              if (gridBtn) {
+                gridBtn.hidden = (name !== 'ThisCrazyLife');
+              }
+
+              // tell server
+              fetch('update_game_track.php', {
+                method: 'POST',
+                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                body: `action=join&user=${encodeURIComponent(username)}`
+              });
+              // swap out input/confirm row for plain-text username
+              // prefer removing the confirm prompt if it exists, otherwise the input row
+              const confirmDiv = document.getElementById('usernameConfirm');
+              const row        = confirmDiv || document.querySelector('#usernameSection .username-row');
+
+              const p   = document.createElement('p');
+              p.style.cssText = 'font-size:5em;font-weight:bold;margin:0';
+              p.textContent   = username;
+              row.replaceWith(p);
+              document.getElementById('usernameMessage').textContent = '';
+            }
+
+
+        // Username
+        document.getElementById('usernameSubmit')
+          .addEventListener('click', () => {
+          const input = document.getElementById('usernameInput');
+          const msg   = document.getElementById('usernameMessage');
+          const name  = input.value.trim();
+          if (!name) { msg.textContent = 'Name required'; return; }
+          joinUser(name);
+          Voice.init(name);
+            sIn = 'yes';
+            signIn();
+            document.querySelector('#bingoBtn').classList.remove('blocked');
+            document.querySelector('#cornersBtn').classList.remove('blocked');
+            document.querySelector('#blockBtn').classList.remove('blocked');
+          });
+
+
+          signIn();
+
+                            // ——— Audio toggle button ———
+        // ——— Top-right controls: #, 🎙, 💬, 🔊 ———
+        const lbBtn = document.getElementById('lbBtn');
+
+        // 🔊 game audio toggle
+        const audioToggle = document.createElement('button');
+        audioToggle.id = 'audioToggle';
+        audioToggle.textContent = '🔇';
+        audioToggle.style.cssText = `
+          font-size: 3em;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          margin-right: 0.25em;
+          color: #fff;
+        `;
+        audioToggle.addEventListener('click', () => {
+          audioEnabled = !audioEnabled;
+          audioToggle.textContent = audioEnabled ? '🔊' : '🔇';
+
+                    // sync voice module audio mute/unmute
+          if (window.Voice && typeof Voice.setAudioEnabled === 'function') {
+            Voice.setAudioEnabled(audioEnabled);
+          }
+
+          if (audioEnabled) {
+            // iOS unlock: silently play/pause every clip
+            [...preloadedBingoAudios, ...preloadedCornersAudios, ...preloadedWinAudios]
+              .forEach(a => {
+                a.muted = true;
+                a.currentTime = 0;
+                a.play()
+                  .then(() => {
+                    a.pause();
+                    a.muted = false;
+                  })
+                  .catch(() => {
+                    a.muted = false;
+                  });
+              });
+          }
+        });
+
+        // wrapper for #, 🎙, 💬, 🔊
+        const btnWrap = document.createElement('span');
+        btnWrap.style.cssText = `
+          display:inline-flex;
+          align-items:center;
+          gap:.35em;
+          position:relative;
+        `;
+
+        // # grid button
+        const gridBtn = document.createElement('button');
+        gridBtn.id = 'gridBtn';
+        gridBtn.textContent = '#';
+        gridBtn.style.cssText = `
+          font-size: 3em;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color:#fff;
+        `;
+        gridBtn.hidden = true; // hidden for everyone until admin logs in
+
+        // 🎙 mic button (muted by default)
+        const micBtn = document.createElement('button');
+        micBtn.id = 'micBtn';
+        micBtn.textContent = '🎙';       // OFF
+        micBtn.style.cssText = `
+          font-size: 3em;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color:#fff;
+          opacity:0.3;
+        `;
+        micBtn.addEventListener('click', () => {
+          if (micBtn.disabled) return;
+          toggleMic(micBtn);
+        });
+
+        // 💬 chat button
+        const chatBtn = document.createElement('button');
+        chatBtn.id = 'chatBtn';
+        chatBtn.textContent = '💬';
+        chatBtn.style.cssText = `
+          font-size: 3em;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color:#fff;
+        `;
+
+        // start with chat + mic disabled until player has joined
+        if (sIn === 'no') {
+          chatBtn.disabled = true;
+          chatBtn.style.opacity = '0.3';
+          chatBtn.style.cursor = 'default';
+
+          micBtn.disabled = true;
+          micBtn.style.opacity = '0.3';
+          micBtn.style.cursor = 'default';
+        }
+
+        // dropdown
+        const menu = document.createElement('div');
+        menu.className = 'grid-menu';
+        menu.innerHTML = `
+          <button data-mode="OG">OG (6×9)</button>
+          <button data-mode="5x5">5×5</button>
+          <button data-mode="6x6">6×6</button>
+          <button data-mode="7x7">7×7</button>
+          <button data-mode="8x8">8×8</button>
+          <button data-mode="9x9">9×9</button>
+          <button data-mode="10x10">10×10</button>
+        `;
+
+        // open/close
+        gridBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.style.display = (menu.style.display === 'block' ? 'none' : 'block');
+        });
+        document.addEventListener('click', () => { menu.style.display = 'none'; });
+        menu.querySelectorAll('button').forEach(b => {
+          b.addEventListener('click', () => {
+            setGridMode(b.dataset.mode);
+            menu.style.display = 'none';
+          });
+        });
+
+        // assemble: [#] [🎙] [💬] [🔊] [Leader Board]
+        btnWrap.appendChild(gridBtn);
+        btnWrap.appendChild(micBtn);
+        btnWrap.appendChild(chatBtn);
+        btnWrap.appendChild(audioToggle);
+        btnWrap.appendChild(menu);
+        lbBtn.parentNode.insertBefore(btnWrap, lbBtn);
+
+        initChatSystem(chatBtn);
+        startChatPolling();
+
+//----------------------------------------------------------------------------------
+
+        // Refresh
+        document.getElementById('refreshBtn')
+          .addEventListener('click', renderDeck);
+
+        // Leaderboard
+        document.getElementById('lbBtn')
+          .addEventListener('click', showLeaderboard);
+
+        // Callers modal
+        document.getElementById('callersBtn')
+          .addEventListener('click', showCallersModal);
+        document.getElementById('closeCallers')
+          .addEventListener('click', hideCallersModal);
+
+        // Controls
+        document.getElementById('startBtn').addEventListener('click', async () => {
+          // 1) clear any existing ticker and reset announcement/flags
+          if (selectionInterval) clearInterval(selectionInterval);
+          selectionInterval = null;
+          clearAnnouncement();
+          window.bingoWindowExpired = false;
+          window.cornersWindowExpired = false;
+          window.bingoCountdownStarted = false;
+          window.cornersCountdownStarted = false;
+          lastBingoSoundIdx = null;
+          lastCornerSoundIdx = null;
+
+          // 2) tell server to Start, refresh UI
+          await fetch('update_game_track.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:'action=start'
+          });
+          await fetchGameTrack();   // ← now the UI is in “Start”
+        });
+
+        document.getElementById('pauseBtn')
+          .addEventListener('click', () => fetch('update_game_track.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:'action=pause'
+          }));
+        document.getElementById('restartBtn')
+          .addEventListener('click', () => fetch('update_game_track.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:'action=reset'
+          }));
+        document.getElementById('masterResetBtn')
+          .addEventListener('click', () => {
+            if (!confirm('Confirm master reset?')) return;
+            fetch('update_game_track.php', {
+              method:'POST',
+              headers:{'Content-Type':'application/x-www-form-urlencoded'},
+              body:'action=mr'
+            });
+          });
+
+        // Game calls
+        document.getElementById('bingoBtn')
+          .addEventListener('click', onBingoCall);
+        document.getElementById('cornersBtn')
+          .addEventListener('click', onCornersCall);
+        document.getElementById('blockBtn')
+          .addEventListener('click', onBlockCall);
+      });
+     
+     // ───────── CHAT STATE / HELPERS ─────────
+let chatMessages = [];
+let chatLastSeenTs = Number(localStorage.getItem('chatLastSeenTs') || '0');
+let chatPollTimer = null;
+const CHAT_POLL_MS = 4000;
+const chatNameColors = {};
+
+// init with existing 💬 button
+function initChatSystem(chatButton) {
+  createChatOverlay();
+  const btn = chatButton || document.getElementById('chatBtn');
+  if (btn) {
+    btn.style.position = 'relative';
+    const dot = document.createElement('span');
+    dot.id = 'chatUnreadDot';
+    dot.className = 'chat-unseen-dot';
+    btn.appendChild(dot);
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleChatWindow();
+    });
+  }
+  applyInitialChatTheme();
+}
+
+// build overlay/window once
+function createChatOverlay() {
+  if (document.getElementById('chatOverlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'chatOverlay';
+  overlay.innerHTML = `
+    <div id="chatWindow" class="chat-dark">
+      <div class="chat-header">
+        <span class="chat-title">Sheeet Talk'n</span>
+        <div class="chat-header-right">
+          <button id="chatThemeToggle" title="Toggle light / dark">☀️</button>
+          <button id="chatClose" title="Close chat">✕</button>
+        </div>
+      </div>
+      <div id="chatMessages"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" rows="1" placeholder="Type a message…"></textarea>
+        <button id="chatSend" title="Send (Enter)">➤</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeBtn = document.getElementById('chatClose');
+  const themeToggle = document.getElementById('chatThemeToggle');
+  const input = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSend');
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) hideChatWindow();
+  });
+
+  closeBtn.addEventListener('click', hideChatWindow);
+  themeToggle.addEventListener('click', toggleChatTheme);
+
+  sendBtn.addEventListener('click', function () {
+    sendChatMessage();
+  });
+
+  input.addEventListener('keydown', function (e) {
+    // Enter to send, Shift+Enter for newline
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  input.addEventListener('input', autoResizeChatInput);
+  autoResizeChatInput();
+}
+
+function toggleChatWindow() {
+  const overlay = document.getElementById('chatOverlay');
+  if (!overlay) return;
+  if (overlay.style.display === 'flex') {
+    hideChatWindow();
+  } else {
+    showChatWindow();
+  }
+}
+
+function showChatWindow() {
+  const overlay = document.getElementById('chatOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  const input = document.getElementById('chatInput');
+  if (input) setTimeout(() => input.focus(), 0);
+  markChatSeen();
+}
+
+function hideChatWindow() {
+  const overlay = document.getElementById('chatOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'none';
+  markChatSeen();
+}
+
+function autoResizeChatInput() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  input.style.height = 'auto';
+  const max = 120;
+  input.style.height = Math.min(input.scrollHeight, max) + 'px';
+}
+
+// theme handling
+function applyInitialChatTheme() {
+  const saved = localStorage.getItem('chatTheme') || 'dark';
+  applyChatTheme(saved);
+}
+
+function toggleChatTheme() {
+  const win = document.getElementById('chatWindow');
+  if (!win) return;
+  const isDark = win.classList.contains('chat-dark');
+  applyChatTheme(isDark ? 'light' : 'dark');
+}
+
+function applyChatTheme(theme) {
+  const win = document.getElementById('chatWindow');
+  const toggle = document.getElementById('chatThemeToggle');
+  if (!win || !toggle) return;
+
+  win.classList.remove('chat-dark', 'chat-light');
+  if (theme === 'light') {
+    win.classList.add('chat-light');
+    toggle.textContent = '🌙';
+  } else {
+    win.classList.add('chat-dark');
+    toggle.textContent = '☀️';
+    theme = 'dark';
+  }
+  localStorage.setItem('chatTheme', theme);
+}
+
+// polling
+function startChatPolling() {
+  if (chatPollTimer) return;
+  function tick() {
+    fetchChatOnce().finally(function () {
+      chatPollTimer = setTimeout(tick, CHAT_POLL_MS);
+    });
+  }
+  tick();
+}
+
+function fetchChatOnce() {
+  return fetch('chat/chat.php?action=list&ts=' + Date.now())
+    .then(function (res) {
+      if (!res.ok) throw new Error('chat list failed');
+      return res.json();
+    })
+    .then(function (data) {
+      const msgs = Array.isArray(data.messages) ? data.messages.slice() : [];
+      msgs.sort(function (a, b) {
+        return (Number(a.ts || 0) - Number(b.ts || 0));
+      });
+
+      const changed =
+        msgs.length !== chatMessages.length ||
+        (msgs.length &&
+          (!chatMessages.length ||
+            msgs[msgs.length - 1].ts !== chatMessages[chatMessages.length - 1].ts));
+
+      chatMessages = msgs;
+      if (changed) {
+        renderChatMessages();
+        updateChatUnreadDot();
+      }
+    })
+    .catch(function (err) {
+      console.error('chat fetch failed', err);
+    });
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  // only signed-in players can chat
+  const user = localStorage.getItem('username') || '';
+  if (!user) {
+    announce1(
+      `<div class="alert-message">
+        SUBMIT DISCORD NAME AT THE TOP TO JOIN CHAT
+      </div>`
+    );
+    return;
+  }
+
+  const body = new URLSearchParams();
+  body.append('action', 'send');
+  body.append('user', user);
+  body.append('message', text);
+
+  fetch('chat/chat.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString()
+  })
+    .then(function (res) { return res.json(); })
+    .then(function () {
+      input.value = '';
+      autoResizeChatInput();
+      return fetchChatOnce();
+    })
+    .then(function () {
+      markChatSeen();
+    })
+    .catch(function (err) {
+      console.error('chat send failed', err);
+    });
+}
+
+function renderChatMessages() {
+  const list = document.getElementById('chatMessages');
+  if (!list) return;
+  list.innerHTML = '';
+
+  let lastDateKey = '';
+
+  chatMessages.forEach(function (m) {
+    const tsSec = Number(m.ts || 0);
+    if (!tsSec) return;
+    const d = new Date(tsSec * 1000);
+    if (isNaN(d.getTime())) return;
+
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const dayName = d.toLocaleDateString(undefined, { weekday: 'long' });
+
+    const dateKey = yyyy + '-' + mm + '-' + dd;
+    const dateLabel = mm + '.' + dd + '.' + yyyy + ' - ' + dayName;
+
+    if (dateKey !== lastDateKey) {
+      lastDateKey = dateKey;
+      const div = document.createElement('div');
+      div.className = 'chat-date-divider';
+      div.textContent = dateLabel;
+      list.appendChild(div);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'chat-message';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'chat-username';
+    nameSpan.textContent = m.user;
+    nameSpan.style.color = colorForName(m.user || '');
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'chat-text';
+
+    const raw = String(m.msg || '');
+    const trimmed = raw.trim();
+    const imageOnly = /^https?:\/\/\S+\.(gif|png|jpe?g|webp)$/i.test(trimmed);
+
+    if (imageOnly) {
+      const img = document.createElement('img');
+      img.className = 'chat-image';
+      img.src = trimmed;
+      img.alt = 'image';
+      textSpan.appendChild(img);
+    } else {
+      textSpan.innerHTML = linkifyAndEscape(raw);
+    }
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'chat-timestamp';
+    timeSpan.textContent = d.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+
+    row.appendChild(nameSpan);
+    row.appendChild(textSpan);
+    row.appendChild(timeSpan);
+    list.appendChild(row);
+  });
+
+  // keep view pinned to latest
+  list.scrollTop = list.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, function (ch) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[ch];
+  });
+}
+
+function linkifyAndEscape(str) {
+  const escaped = escapeHtml(str);
+  const urlRe = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+  return escaped.replace(urlRe, function (url) {
+    let href = url;
+    if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+    return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+  });
+}
+
+function colorForName(name) {
+  if (!name) return '#7bd3ff';
+  if (!chatNameColors[name]) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
+    }
+    const hue = Math.abs(hash) % 360;
+    chatNameColors[name] = 'hsl(' + hue + ',70%,60%)';
+  }
+  return chatNameColors[name];
+}
+
+function getLatestChatTs() {
+  if (!chatMessages.length) return 0;
+  const last = chatMessages[chatMessages.length - 1];
+  return Number(last.ts || 0);
+}
+
+function markChatSeen() {
+  chatLastSeenTs = getLatestChatTs();
+  localStorage.setItem('chatLastSeenTs', String(chatLastSeenTs));
+  updateChatUnreadDot();
+}
+
+function updateChatUnreadDot() {
+  const dot = document.getElementById('chatUnreadDot');
+  if (!dot) return;
+  const latest = getLatestChatTs();
+  dot.style.display = latest > chatLastSeenTs ? 'block' : 'none';
+}
+
+
+      // ─── Polling & GameTrack Handler ───
+      async function fetchGameTrack() {
+        try {
+const track = await fetchJSONSafe('get_game_track.php');
+
+                    // ---- filter out any callers we've already handled ----
+          const newCallers = (track.callers || [])
+            .filter(c => c.ts > lastCallersTs);
+
+          // if there are brand‑new calls, hand _only_ those to your UI
+          if (newCallers.length) {
+            updateCallersUI(newCallers);
+            // bump our watermark so next time these won't re‑run
+            lastCallersTs = Math.max(...newCallers.map(c => c.ts));
+          }
+
+          // ── build local lookup from server-side titles array ───────────────────
+          connectionArray = {};
+          idArray = [];
+          if (Array.isArray(track.titles)) {
+            track.titles.forEach(t => {
+              connectionArray[t.id] = t.html;
+              idArray.push(t.id);
+            });
+          }
+
+          let ids = track.titles.map(t => t.id).slice(0, 53); // Only 53 here
+          const eligible = [1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,32,33,34,35,36,37,38,39,40,41,42,43,  // no corners
+                            28,29,30]; // more safe mid points
+          const freePos = eligible[Math.floor(Math.random() * eligible.length)];
+          ids.splice(freePos, 0, 'free');
+          idArray = ids;
+
+               if (!document.querySelector('#mainDeck').children.length) {
+              renderDeck();
+            }
+                      
+          // ── inject wildcard ─────────────────────────
+          if (!track.called.includes('wildcard')) {
+            track.called.unshift('wildcard');
+          }
+
+          // ── now proceed as normal  ──────────────────
+          gameTrack = track;
+          handleGameTrack(gameTrack);
+        } catch(e) {
+          console.error('GameTrack fetch failed', e);
+        }
+      }
+
+      async function fetchJSONSafe(url, options) {
+  const resp = await fetch(url, options);
+  const text = await resp.text();
+
+  // Find the first “{” and the last “}” and parse only that slice.
+  const start = text.indexOf('{');
+  const end   = text.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    const payload = text.slice(start, end + 1);
+    try {
+      return JSON.parse(payload);
+    } catch (e) {
+      console.error('JSON parse failed', e, { preview: text.slice(0, 200) });
+      throw e;
+    }
+  }
+  console.error('Non-JSON response', { preview: text.slice(0, 200) });
+  throw new Error('Non-JSON response');
+}
+
+
+
+        /* 0) skip until the JSON definitely contains gameState */
+        function handleGameTrack(track) {
+        if (!track || !track.gameState || !track.gameState.state) return;
+                const gs = track.gameState.state;
+                    if (gs === 'Start') {
+                    if (canTouchAnnouncements()) clearAnnouncement(); 
+                    kickTicker();
+                    }
+
+                // capture previous state BEFORE any early returns, then update immediately
+                const prevState = lastServerState || '';
+                lastServerState = gs;
+
+                // ── Unified game-over router (runs BEFORE Pause/Start branches) ────────────
+(function gameOverRouter() {
+  const b2 = Number(track?.gameState?.bingos ?? 0) >= 2;
+  if (!b2) return;
+  if (!(gs === 'Start' || gs === 'Pause')) return;
+
+  // Per-game idempotency (don’t re-announce the same game more than once)
+  const gid = Number(track?.currentGame) || 1;
+  if (window.__goShown === gid) return;
+  window.__goShown = gid;
+
+  // Make sure a previous banner lock doesn’t block us
+  window._hasAnnounced = false;
+
+  disableAllButtons();
+  announceGroupedOnce(track, { schedulePostAnnouncement });
+  // This owns the flow (sound + lock + LB handoff)
+  throw '__GO_ROUTED__';  // cheap escape to skip the rest of handleGameTrack
+})();
+
+
+        // 1) clear whatever’s on the board already
+            // only highlight the brand‐new called titles (no clear!)
+            const called = track.called || [];
+            const newOnes = called.filter(id => !prevCalled.includes(id));
+            newOnes.forEach(id => {
+              const c = document.getElementById(id);
+              if (c) c.classList.add('active');
+            });
+            // remember for next tick
+            prevCalled = called.slice();
+
+            
+        if (sIn === 'no') {
+          signIn();
+          disableAllButtons();
+          return;
+        } 
+
+
+                       // ── blocking logic ───────────────────────
+                  if (gs === 'Start') {
+        const nowMs       = Date.now();
+        const holdUntilMs = (track.holdUntil || 0) * 1000;
+        const bingoBtn    = document.getElementById('bingoBtn');
+        if (holdUntilMs > nowMs) {
+          bingoBtn.disabled = true;
+          bingoBtn.classList.add('disabled');
+          bingoBtn.querySelector('p').textContent = '✋ Blocked';
+        } else {
+          bingoBtn.disabled = false;
+          bingoBtn.classList.remove('disabled');
+          bingoBtn.querySelector('p').textContent = 'Bingo';
+          enableAllowedButtons(track);
+        }
+      }
+
+
+function schedulePostAnnouncement(gameEnds) {
+  const delay = Math.max(0, ANNOUNCE_LOCK_UNTIL - Date.now()) + 100;
+  setTimeout(() => {
+    const host = getComputedStyle(document.getElementById('controlDeck')).display === 'block';
+    if (host && !gameEnds) document.getElementById('startBtn')?.click();
+    if (gameEnds) showLeaderboard();
+  }, delay);
+}
+
+          
+
+      // ─── Reset UI only when we just entered Start ───
+      if (gs === 'Start' && (prevState === 'Pause' || prevState === 'Reset')) {
+        clearAnnouncement();
+
+        window._hasAnnounced = false;
+        window.bingoWindowExpired      = false;
+        window.cornersWindowExpired    = false;
+        window.bingoCountdownStarted   = false;
+        window.cornersCountdownStarted = false;
+        window.cornersCalled           = false;
+        lastAnnounceTs = 0;          // ensure new announcements aren't ignored
+        prevCalled = [];             // local “already highlighted” list
+        isKicking = false;           // clear any leftover lock
+
+        
+        // fresh per-tab locks
+        window._submittedBingoTypes = new Set();
+        window._submittedCorners    = new Set();
+        window._bingoCalledType     = null;
+        window._cornersCalled       = false;
+
+        // UI
+        const bBtn = document.getElementById('bingoBtn');
+        if (bBtn) bBtn.disabled = false;
+        const cBtn = document.getElementById('cornersBtn');
+        if (cBtn) cBtn.disabled = false;
+        enableAllowedButtons(track);
+        document.getElementById('startBtn').disabled = (track.gameState.state === 'Start');
+      }
+
+      // Only reset bingoCountdownStarted when we just left a "<type>_pending"
+      if (prevState.endsWith('_pending') && gs !== prevState) {
+        const prevType = prevState.split('_')[0];
+
+          if (['horizontal','vertical','both'].includes(prevType)) {
+            window.bingoCountdownStarted = false;
+            // allow new submissions for that type
+            if (window._submittedBingoTypes) window._submittedBingoTypes.delete(prevType);
+            const b = document.getElementById('bingoBtn');
+            if (b) b.disabled = false;
+          } else if (prevType === 'corners') {
+            window.cornersCountdownStarted = false;
+            if (window._submittedCorners) window._submittedCorners.delete('corners');
+            const c = document.getElementById('cornersBtn');
+            if (c) c.disabled = false;
+          }
+        }
+
+if (prevState.endsWith('_pending') && gs === 'Start') {
+  announceGroupedOnce(track, { schedulePostAnnouncement });
+}
+
+
+        /* master-reset -------------------------------------------- */
+        if (gs === 'MR') {
+          /* first time this tab sees MR → hard-reload */
+          if (!sessionStorage.getItem('mrReloaded')) {
+            sessionStorage.setItem('mrReloaded', '1');
+            location.reload();
+            return;  // never reaches the rest
+          }
+
+          /* we’re back from reload and still seeing MR → tell server to move to Pause, then clear the flag */
+          fetch('update_game_track.php', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+            body: 'action=pause'
+          });
+          sessionStorage.removeItem('mrReloaded');
+          return;  // skip other handlers this tick
+        }
+
+        if (gs === 'Reset' && prevState !== 'Reset') {
+            // stop auto-caller
+          clearInterval(selectionInterval);
+          selectionInterval = null;
+          resetBoardUI();                // wipe
+          const old = document.getElementById('lbModal');
+          if (old) old.remove();
+            const oldOverlay = document.getElementById('lbOverlay');
+          if (oldOverlay) oldOverlay.remove();
+          window.cornersCalled      = false;
+          window.cornersWindowExpired = false;
+          window.bingoWindowExpired = false;
+          lastBingoSoundIdx = null;
+          lastCornerSoundIdx = null;
+          horizontalClaimed = false;
+          verticalClaimed   = false;
+          lastAnnounceTs = 0;
+          isKicking = false;
+          horizontalWinner  = '';
+          verticalWinner    = '';
+          cornersWinner     = '';
+          if (canTouchAnnouncements()) {
+            const msg1 = `🥳 GET READY!!! 🥳`;
+            announce1(`<div class="alert-message">${msg1}</div>`);
+          }
+          disableAllButtons();
+          // Hard clear local submission state on Reset too
+          window._submittedBingoTypes = new Set();
+          window._submittedCorners    = new Set();
+          window._bingoCalledType     = null;
+          window._cornersCalled       = false;
+
+          const bBtnR = document.getElementById('bingoBtn');
+          if (bBtnR) bBtnR.disabled = false;
+          const cBtnR = document.getElementById('cornersBtn');
+          if (cBtnR) cBtnR.disabled = false;
+          return;                        // nothing else this tick
+        }
+
+
+
+        function pickWinSoundIndexForWindow(ann, winnersArr) {
+  // 1) If server provided a soundIndex, honor it
+  if (Number.isInteger(ann?.soundIndex)) {
+    return ann.soundIndex % preloadedWinAudios.length;
+  }
+  // 2) Otherwise derive a stable index from this window’s data (ts + winners)
+  const key = String(ann?.ts || 0) + '|' +
+    (Array.isArray(winnersArr) ? winnersArr.map(w => `${w.username}:${w.type}`).join(',') : '');
+  let h = 0;
+  for (let i = 0; i < key.length; i++) {
+    h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return h % preloadedWinAudios.length;
+}
+
+
+function getWindowWinners(track) {
+  // Prefer server-side winners array for this window.
+  const winnersArr = Array.isArray(track?.winners) ? track.winners.slice() : [];
+  if (winnersArr.length) return winnersArr;
+
+  // Fallback #1: single announcement payload
+  const ann = track?.announcement || {};
+  if (ann.user && ann.pattern) return [{ username: ann.user, type: ann.pattern }];
+
+  // Fallback #2: last window of the current game (post-reset/MR reload cases)
+  try {
+    const games = track?.games || {};
+    const currentGameId = Number(track?.currentGame) || 1;
+    const g = games[currentGameId] || { windows: [] };
+    const lastWin = Array.isArray(g.windows) ? g.windows[g.windows.length - 1] : null;
+    if (lastWin && Array.isArray(lastWin.winners) && lastWin.winners.length) {
+      return lastWin.winners.slice();
+    }
+  } catch (_) {}
+
+  return [];
+}
+
+
+function announceGroupedOnce(track, opts = {}) {
+  // Hard idempotency: don’t re-announce within the same window
+  if (window._hasAnnounced) return;
+
+  const winnersArr = getWindowWinners(track);
+  if (!winnersArr.length) return; // nothing to announce
+
+  // Banner HTML (grouped even if size==1)
+  const list = winnersArr
+    .filter(Boolean)
+    .map(w => `<li><strong>${w.username}</strong> — ${String(w.type).toUpperCase()}</li>`)
+    .join('');
+
+  window._hasAnnounced = true;
+  announce(
+    `<div class="alert-message">
+       🎉 Winners!<ul style="margin:0.25em 0 0 1em;text-align:left">${list}</ul>
+     </div>`,
+    5000
+  );
+
+  // Exactly one shared win sound per window (deterministic if server provided soundIndex)
+  const ann = track?.announcement || {};
+  const idx = pickWinSoundIndexForWindow(ann, winnersArr);
+  tryPlay(preloadedWinAudios[idx]);
+
+  // Optional follow-up (host auto-restart / show LB)
+if (typeof opts.schedulePostAnnouncement === 'function') {
+  const gameEnds = willThisWindowFinish(track, winnersArr);
+
+  const delay = Math.max(0, ANNOUNCE_LOCK_UNTIL - Date.now());
+  setTimeout(() => {
+    opts.schedulePostAnnouncement(gameEnds);
+    if (gameEnds) {
+      fetch('update_game_track.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=pause'
+      });
+    }
+  }, delay + 100); // gentle cushion past the lock
+}
+  // Lock inputs during banner
+  disableAllButtons();
+}
+
+
+/* winner announcement (via announcement.ts + soundIndex) */
+const ann = track.announcement || {};
+if (ann.ts && ann.ts > lastAnnounceTs) {
+  lastAnnounceTs = ann.ts;
+
+  // If we are in the call window or inside the determining phase, DON'T announce per-win.
+  const gs = track.gameState?.state || '';
+  const inWindow = gs.endsWith('_pending');
+  const inDetermining = window._determineUntil && Date.now() < window._determineUntil;
+
+  if (inWindow || inDetermining) {
+    // Just show the determining banner if we haven’t yet.
+    showDeterminingBanner();
+    return;
+  }
+
+  // Outside of a call window (e.g., host manually assigns on Pause),
+  // allow a tiny debounce to group back-to-back wins.
+  if (!window._announceTimer) window._announceTimer = null;
+  clearTimeout(window._announceTimer);
+  window._announceTimer = setTimeout(async () => {
+    try {
+      const latest = await fetchJSONSafe('get_game_track.php');
+      if (latest && latest.gameState) gameTrack = latest;
+    } catch (_) {}
+
+    announceGroupedOnce(gameTrack, { schedulePostAnnouncement });
+    window._announceTimer = null;
+  }, 250);
+
+  return;
+}
+
+
+        /* when server flips back to Pause, clear the MR reload flag */
+        if (gs === 'Pause' && sessionStorage.getItem('mrReloaded')) {
+          sessionStorage.removeItem('mrReloaded');
+        if (canTouchAnnouncements()) {
+          const msg1 = `🥳 GET READY!!! 🥳`;
+          announce1(`<div class="alert-message">${msg1}</div>`);
+        }
+            disableAllButtons();
+            return;
+        }
+
+        if (gs === 'Pause' && prevState === 'Reset') {
+        if (canTouchAnnouncements()) {
+          const msg1 = `🥳 GET READY!!! 🥳`;
+          announce1(`<div class="alert-message">${msg1}</div>`);
+        }
+            disableAllButtons();
+            return;
+        }
+
+      else if (gs === 'Pause') {
+        if (window._determineUntil && Date.now() < window._determineUntil) return;
+        if (!canTouchAnnouncements()) return;
+        // If the game is over (2+ bingos), open the leaderboard and DO NOT show "Get Ready".
+        if ((track.gameState?.bingos ?? 0) >= 2) {
+          return;
+        }
+
+        // Normal Pause UI (non–game-over)
+        clearInterval(selectionInterval);
+        selectionInterval = null;
+        lastBingoSoundIdx = null;
+        if (canTouchAnnouncements()) {
+          const msg1 = `🥳 GET READY!!! 🥳`;
+          announce1(`<div class="alert-message">${msg1}</div>`);
+        }
+        disableAllButtons();
+        return;
+      }
+
+
+
+else if (gs.endsWith('_pending')) {
+  if (prevState !== gs) {
+  window._autoAssigned = false;
+  window._hasAnnounced = false;
+  window._bingoCalledType   = null;
+  window._cornersCalled     = false;
+  window._lastWinningType = null;
+  window._lastWinner = null;
+  }  
+  clearInterval(selectionInterval);
+  selectionInterval = null;
+
+
+  // — bingo sound sync —
+ const rawType = gs.split('_')[0];
+
+  // — bingo sound sync —
+  if (
+    rawType !== 'corners' &&
+    track.bingoSoundIndex != null &&
+    track.bingoSoundIndex !== lastBingoSoundIdx
+  ) {
+    lastBingoSoundIdx = track.bingoSoundIndex;
+ tryPlay(preloadedBingoAudios[
+    track.bingoSoundIndex % preloadedBingoAudios.length
+ ]);
+   }
+
+
+  // — corners sound sync —
+  if (
+    rawType === 'corners' &&
+    track.cornerSoundIndex != null &&
+    track.cornerSoundIndex !== lastCornerSoundIdx
+  ) {
+    lastCornerSoundIdx = track.cornerSoundIndex;
+ tryPlay(preloadedCornersAudios[
+    track.cornerSoundIndex % preloadedCornersAudios.length
+ ]);
+  }
+
+  if (
+    ['horizontal', 'vertical', 'both'].includes(rawType) &&
+    !window.bingoCountdownStarted
+  ) {
+    window.bingoCountdownStarted = true;
+    startCountdown(rawType);
+    const modeHV = highlightModeFor(rawType);
+    if (modeHV === true) {
+      highlightPattern(rawType);
+    } else if (modeHV === 'winner') {
+      // highlight just one line for the winner
+      highlightPattern(rawType, { winnerOnly: true });
+    }
+    applyWinnerPersistentHighlights();
+  }  else if (
+    rawType === 'corners' &&
+    !window.cornersCountdownStarted
+  ) {
+    window.cornersCountdownStarted = true;
+    startCountdown(rawType);
+    const modeC = highlightModeFor(rawType);
+    if (modeC === true) {
+      highlightPattern(rawType);
+    } else if (modeC === 'winner') {
+      highlightPattern(rawType, { winnerOnly: true });
+    }
+    applyWinnerPersistentHighlights();
+  }
+}
+
+else if (gs.endsWith('_done')) {
+  if (window._determineUntil && Date.now() < window._determineUntil) {
+  // Let the determining timer handle the grouped banner.
+  return;
+}
+
+
+  clearInterval(selectionInterval);
+  selectionInterval = null;
+
+  // winners array from server
+  const winners = Array.isArray(track.winners) ? track.winners : [];
+const gameEnds = willThisWindowFinish(gameTrack, winners);
+
+// … banner stays as-is …
+
+if (gameEnds) {
+  fetch('update_game_track.php', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'action=pause' });
+}
+
+schedulePostAnnouncement(gameEnds);
+
+
+  // —— sync local flags BEFORE announcing (critical) ——
+  horizontalWinner  = '';
+  verticalWinner    = '';
+  cornersWinner     = '';
+  horizontalClaimed = false;
+  verticalClaimed   = false;
+  cornersCalled     = false;
+
+  winners.forEach(w => {
+    if (w.type === 'horizontal' || w.type === 'both') {
+      horizontalWinner = w.username; horizontalClaimed = true;
+    }
+    if (w.type === 'vertical' || w.type === 'both') {
+      verticalWinner = w.username;   verticalClaimed   = true;
+    }
+    if (w.type === 'corners') {
+      cornersWinner = w.username;    cornersCalled     = true;
+    }
+  });
+
+  // keep for window-unlock logic
+  window._lastWinningType = winners[0]?.type || null;
+  window._lastWinner      = winners[0]?.username || null;
+
+  announceGroupedOnce(gameTrack, { schedulePostAnnouncement });
+return;
+
+}
+
+
+
+        /* copy winners from the JSON into local variables */
+        horizontalWinner   = '';
+        verticalWinner     = '';
+        cornersWinner      = '';
+        cornersCalled      = false;
+        horizontalClaimed  = false;
+        verticalClaimed    = false;
+        track.winners.forEach(w => {
+          if (w.type === 'horizontal' || w.type === 'both') {
+            horizontalWinner = w.username;
+            horizontalClaimed = true;
+          }
+          if (w.type === 'vertical' || w.type === 'both') {
+            verticalWinner = w.username;
+            verticalClaimed = true;
+          }
+          if (w.type === 'corners') {
+            cornersWinner = w.username;
+            cornersCalled = true;
+          }
+        });
+
+        //updateCallersUI(track.callers);
+        lastServerState = gs;
+if (track.gameState.bingos >= 2 && (gs === 'Start' || gs === 'Pause')) {
+  // Always run through the grouped announcer; it’s idempotent via _hasAnnounced.
+  disableAllButtons();
+  announceGroupedOnce(gameTrack, { schedulePostAnnouncement });
+  return; // grouped announcer will schedule LB after the lock
+}
+
+
+
+        renderHighlights();              // <-- draw H, V, and Corners together (append:true)
+        applyWinnerPersistentHighlights(); // <-- winner-only reapply on top
+      }
+
+
+
+      // ─── Callers UI w/ Win buttons ───
+        function updateCallersUI(newCallers) {
+        const ul = document.getElementById('callersList');
+        newCallers.forEach(({username:u, type:t}) => {
+          const li = document.createElement('li');
+          li.textContent = `${u} (${t}) `;
+          const btn = document.createElement('button');
+          btn.textContent = 'W';
+          btn.addEventListener('click', () => {
+            // assign winner
+            fetch('update_game_track.php', {
+              method:'POST',
+              headers:{'Content-Type':'application/x-www-form-urlencoded'},
+              body:`action=win&user=${encodeURIComponent(u)}&type=${encodeURIComponent(t)}`
+            });
+            if (t === 'horizontal') { horizontalWinner = u;  horizontalClaimed = true; }
+            if (t === 'vertical')   { verticalWinner   = u;  verticalClaimed   = true; }
+            if (t === 'both')       { horizontalWinner = verticalWinner = u;
+                                      horizontalClaimed = verticalClaimed = true; }
+            if (t === 'corners') {          // record the win locally
+              cornersCalled = true;
+              cornersWinner = u;
+            }
+            hideCallersModal();
+          });
+          li.appendChild(btn);
+          ul.appendChild(li);
+        });
+      }
+
+      function callServerForTitle() {
+        fetch('update_game_track.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body: 'action=callTitle'
+        }).then(() => fetchGameTrack());
+        }
+
+
+function onBingoCall() {
+  const btn = document.getElementById('bingoBtn');
+  const st = gameTrack.gameState.state;
+  const me = localStorage.getItem('username');
+
+  // initialize per-type submission tracker
+  if (!window._submittedBingoTypes) {
+    window._submittedBingoTypes = new Set();
+  }
+
+
+  // disable immediately to prevent rapid double clicks (UI level)
+  if (btn) btn.disabled = true;
+
+  bingoAttempt().then(t => {
+    if (!t) {
+      // attempt failed; allow retry
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    if (
+      window.bingoCountdownStarted &&
+      !bingoWindowExpired &&
+      (window._bingoCalledType === t || window._submittedBingoTypes.has(t))
+    ) {
+    announce1(
+      `<div class="alert-message">
+         ✅ Determinning (${t.toUpperCase()}) Winner!
+       </div>`
+    );
+    return;
+  }
+    // Immediate feedback on every click (requirement)
+    announce1(
+      `<div class="alert-message">
+         ✅ BINGO (${t.toUpperCase()}) submitted!
+       </div>`
+    );
+
+    // If we've already processed this type once for this player, stop here.
+    if (window._submittedBingoTypes.has(t)) {
+      return; // only message, nothing else
+    }
+
+    // Mark this type as submitted so further clicks don't do anything beyond the message
+    window._submittedBingoTypes.add(t);
+    window._bingoCalledType = t; // preserve whatever other logic expects (single last type)
+
+    // already claimed check
+    if (
+      (t === 'horizontal' && horizontalClaimed) ||
+      (t === 'vertical'   && verticalClaimed)   ||
+      (t === 'both'       && (horizontalClaimed || verticalClaimed))
+    ) {
+      announce1(
+        `<div class="alert-message">
+           That bingo type has already been called.
+         </div>`,
+        5000
+      );
+      // bad call: allow retry by unmarking
+      window._submittedBingoTypes.delete(t);
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    // finally send to server (only once per type)
+    fetch('update_game_track.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: `action=call&user=${encodeURIComponent(me)}&type=${encodeURIComponent(t)}`
+    }).catch(() => {
+      // network failure: let them retry
+      window._submittedBingoTypes.delete(t);
+      if (btn) btn.disabled = false;
+    });
+  });
+}
+
+      
+
+      function onCornersCall() {
+        const st = gameTrack.gameState.state;
+        const me = localStorage.getItem('username');
+
+  // initialize per‐type submission tracker
+  if (!window._submittedCorners) {
+    window._submittedCorners = new Set();
+  }
+
+  if (
+    window.cornersCountdownStarted &&
+    !cornersWindowExpired &&
+    (window._cornersCalled || window._submittedCorners.has('corners'))
+   ) {
+    announce1(
+      `<div class="alert-message">
+         ✅ Determinning Corners Winner!
+       </div>`
+    );
+    return;
+  }
+
+  // your existing corner‐validation:
+  const all = [...document.querySelectorAll('#mainDeck .card')];
+  const pr = currentPR();
+  const corners = [
+    all[0],
+    all[pr - 1],
+    all[all.length - pr],
+    all[all.length - 1]
+  ];
+  if (!corners.every(c => c.classList.contains('active'))) {
+    showError();
+    return;
+  }
+
+  // immediate feedback & record
+  announce1(
+    `<div class="alert-message">
+       ✅ CORNERS call submitted!
+     </div>`
+  );
+
+  // prevent duplicate submissions (UI + server)
+  if (window._submittedCorners.has('corners')) {
+    return; // only the banner, nothing else
+  }
+  window._submittedCorners.add('corners');
+
+  window._cornersCalled = true;
+
+  // send to server
+  fetch('update_game_track.php', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: `action=call&user=${encodeURIComponent(me)}&type=corners`
+  });
+}
+
+function onBingoWindowEndWithoutWin(callType) {
+  if (window._submittedBingoTypes) {
+    window._submittedBingoTypes.delete(callType);
+  }
+  const btn = document.getElementById('bingoBtn');
+  if (btn) btn.disabled = false;
+}
+
+
+          function onBlockCall() {
+            const st = gameTrack.gameState.state;
+            const me = localStorage.getItem('username');
+            if (!me) return;               // not joined yet
+            if (st !== 'Start') {          // only block during an active game
+              blockBtn.classList.add('blocked');
+              return;
+            }
+            const btn = document.getElementById('blockBtn');
+            fetch('update_game_track.php', {
+              method: 'POST',
+              headers: {'Content-Type':'application/x-www-form-urlencoded'},
+              body: `action=block&user=${encodeURIComponent(me)}`
+            })
+          .then(() => {
+            fetchGameTrack();      // refresh everyone’s state
+            btn.classList.add('used', 'disabled'); //blk used
+          });
+        }
+
+   
+      // ─── Helpers & Utilities ───
+
+function signIn() {
+
+  if (sIn === 'no') {
+    // disable all three buttons
+    document
+      .querySelectorAll('#bingoBtn, #cornersBtn, #blockBtn')
+      .forEach(el => el.classList.add('disabled', 'blocked'));
+
+    // disable chat button too
+    const chatBtnEl = document.getElementById('chatBtn');
+    if (chatBtnEl) {
+      chatBtnEl.disabled = true;
+      chatBtnEl.style.opacity = '0.3';
+      chatBtnEl.style.cursor = 'default';
+    }
+
+    // hard-kill mic + lock its button
+    forceMicOff();
+
+    // prompt them to join
+    announce1(
+      `<div class="alert-message">
+        SUBMIT DISCORD NAME AT THE TOP TO JOIN
+      </div>`);
+    return;
+  } else {
+    // (leave your existing "else" block exactly as-is)
+    clearAnnouncement();
+    document
+      .querySelectorAll('#bingoBtn, #cornersBtn, #blockBtn')
+      .forEach(el => el.classList.remove('blocked'));
+
+    // enable chat once signed in
+    const chatBtnEl = document.getElementById('chatBtn');
+    if (chatBtnEl) {
+      chatBtnEl.disabled = false;
+      chatBtnEl.style.opacity = '';
+      chatBtnEl.style.cursor = 'pointer';
+    }
+
+    const micBtnEl = document.getElementById('micBtn');
+    if (micBtnEl) {
+      micBtnEl.disabled = false;
+      micBtnEl.style.opacity = '0.3';   // still muted until they click
+      micBtnEl.style.cursor = 'pointer';
+    }
+
+    if (canTouchAnnouncements()) {
+      const msg1 = `🥳 GET READY!!! 🥳`;
+      announce1(`<div class="alert-message">${msg1}</div>`);
+    }
+  }
+}
+
+
+      /* wipe board after a reset */
+      function resetBoardUI() {
+        // clear active squares
+        document.querySelectorAll('#mainDeck .card.active')
+        .forEach(c => c.classList.remove('active'));
+        //document.querySelectorAll('#bingoBtn, #cornersBtn, #blockBtn')
+        ///.forEach(el => el.classList.remove('disabled'));
+                
+        renderDeck();
+
+        // rebuild remaining-titles pool
+        window.remaining = shuffle(idArray.slice());
+
+        // reset flags & announcement
+        clearAnnouncement();
+        window.bingoCountdownStarted   = false;
+        window.cornersCountdownStarted = false;
+        window.bingoWindowExpired = false;
+        window.cornersWindowExpired = false;
+        blockBtn.classList.remove('used');
+        prevCalled = [];
+
+        // re-enable buttons for a fresh round
+        enableAllowedButtons(gameTrack);
+      }
+
+      document.querySelector('.emoji')?.classList.add('active');
+
+function clearAnnouncement(force = false) {
+  if (!force && !canTouchAnnouncements()) return; // respect lock
+  const ann = document.getElementById('announcement');
+  if (ann) ann.innerHTML = '';
+}
+
+function announce(html, timeout = 5000) {
+  const ann = document.getElementById('announcement');
+  if (!ann) return;
+  ann.innerHTML = html;
+
+  // lock for the duration + a small cushion
+  lockAnnouncements(timeout + 200);
+
+  // clear after timeout only if the lock has expired by then
+  setTimeout(() => { clearAnnouncement(); }, timeout);
+}
+
+function announce1(html) {
+  // "persistent" setter used in a lot of places — respect lock
+  if (!canTouchAnnouncements()) return;
+  const ann = document.getElementById('announcement');
+  if (ann) ann.innerHTML = html;
+}
+
+      function enableAllowedButtons(track) {
+          // keep inputs disabled while a winners announcement is showing
+          if (!canTouchAnnouncements()) { 
+            disableAllButtons(); 
+            return; 
+          }
+
+        const me       = localStorage.getItem('username');
+
+        /*game-over when two bingos are logged*/
+        const gameOver = track.gameState.bingos >= 2;
+
+        if (
+          gameOver ||
+          me === horizontalWinner ||
+          me === verticalWinner
+        ) {
+          document.querySelector('#bingoBtn').classList.add('disabled');
+        } else {
+          document.querySelector('#bingoBtn').classList.remove('disabled');
+        }
+
+        if (
+          gameOver ||
+          track.gameState.corners >= 1
+        ) {
+          document.querySelector('#cornersBtn').classList.add('disabled');
+        } else {
+          document.querySelector('#cornersBtn').classList.remove('disabled');
+        }
+
+          if (
+          gameOver ||
+          track.gameState.corners >= 1
+        ) {
+          document.querySelector('#cornersBtn').classList.add('disabled');
+        }
+
+                // Only re-enable Block if the player hasn't already used it
+        const blkBtn = document.querySelector('#blockBtn');
+        if (blkBtn && !blkBtn.classList.contains('used')) {
+          blkBtn.classList.remove('disabled');
+        }
+      }
+
+
+      function disableAllButtons() {
+        document.querySelector('#bingoBtn').classList.add('disabled');
+        document.querySelector('#cornersBtn').classList.add('disabled');
+        document.querySelector('#blockBtn').classList.add('disabled');
+      }
+
+            function enableAllButtons() {
+        document.querySelector('#bingoBtn').classList.remove('disabled');
+        document.querySelector('#cornersBtn').classList.remove('disabled');
+        document.querySelector('#blockBtn').classList.remove('disabled');
+      }
+
+      /* builds & shows the leaderboard modal */
+/* builds & shows the leaderboard modal */
+function showLeaderboard() {
+  stopTicker();
+
+  /* close any existing leaderboard (overlay + modal) first */
+  const oldOverlay = document.getElementById('lbOverlay');
+  if (oldOverlay) oldOverlay.remove();
+
+  /* 1) Build LIVE (top block) from gameTrack -------------------------------- */
+  (function buildLiveFromGameTrack() {
+    const games = (gameTrack && gameTrack.games) ? gameTrack.games : {};
+    const currentGameId = Number(gameTrack?.currentGame) || 1;
+    // Prefer the server-declared currentGame; only fall back if it's missing.
+    const cg = games[currentGameId] ? currentGameId : (() => {
+      const gameKeys = Object.keys(games)
+        .map(k => parseInt(k, 10))
+        .filter(n => Number.isFinite(n));
+      return gameKeys.length ? Math.max(...gameKeys) : currentGameId;
+    })();
+
+    const g = games[cg] || { windows: [] };
+
+    // windows already snapshotted by server (prior windows in this game)
+    const windows = Array.isArray(g.windows) ? [...g.windows] : [];
+
+    // --- add the CURRENT open window (only if game isn't finished) ---
+    var bingosNow = (gameTrack && gameTrack.gameState && typeof gameTrack.gameState.bingos === 'number')
+      ? gameTrack.gameState.bingos : 0;
+    var finishedNow = bingosNow >= 2;
+
+    if (
+      !finishedNow &&
+      gameTrack &&
+      Array.isArray(gameTrack.callers) &&
+      gameTrack.callers.length > 0
+    ) {
+      // shallow copy to avoid mutating gameTrack.callers
+      var callers = gameTrack.callers.slice();
+
+      // de-dupe callers in this live window by username|type
+      (function () {
+        var seen = {};
+        callers = callers.filter(function (c) {
+          var key = (c.username || '') + '|' + (c.type || '');
+          if (seen[key]) return false;
+          seen[key] = true;
+          return true;
+        });
+      })();
+
+      // winners that correspond to these callers (same user+type)
+      var wins = (gameTrack.winners || []).filter(function (w) {
+        var wu = (w && w.username) || '';
+        var wt = (w && w.type) || '';
+        for (var i = 0; i < callers.length; i++) {
+          var c = callers[i] || {};
+          if ((c.username || '') === wu && (c.type || '') === wt) return true;
+        }
+        return false;
+      });
+
+      windows.push({
+        ts: Math.floor(Date.now() / 1000),
+        callers: callers,
+        winners: wins
+      });
+    }
+
+    // Render the current game block
+    let html = '';
+    const headerText = `Game ${cg} ${finishedNow ? '(finished)' : '(in progress)'}`;
+
+    html += `<div class="game-block"><h4>${headerText}</h4>`;
+
+    if (!windows.length) {
+      html += '<p>No calls yet.</p>';
+    } else {
+      html += '<table><thead><tr><th>User</th><th>Type</th><th>W/L</th></tr></thead><tbody>';
+      windows.forEach(win => {
+        const callers = win.callers || [];
+        const winSet = new Set((win.winners || []).map(w => `${w.username}|${w.type}`));
+        callers.forEach(c => {
+          const k = `${c.username}|${c.type}`;
+          const wl = winSet.has(k) ? 'W' : 'L';
+          html += `<tr><td>${c.username}</td><td>${String(c.type).toUpperCase()}</td><td>${wl}</td></tr>`;
+        });
+      });
+      html += '</tbody></table>';
+    }
+
+    // "Taken" snapshot from gameTrack (bingo types & corners)
+    const bingoTypes = Array.isArray(gameTrack?.bingoTypes) ? gameTrack.bingoTypes : [];
+    const cornersWon = (gameTrack?.gameState?.corners ?? 0) >= 1;
+    const taken = [
+      bingoTypes.includes('horizontal') ? 'Horizontal' : null,
+      bingoTypes.includes('vertical')   ? 'Vertical'   : null,
+      bingoTypes.includes('both')       ? 'Both'       : null,
+      cornersWon ? 'Corners' : null
+    ].filter(Boolean);
+    html += `<p style="margin-top:.5rem;"><strong>Taken:</strong> ${taken.length ? taken.join(', ') : '—'}</p>`;
+    html += '</div>';
+
+    // stash for later DOM insertion
+    window.__lbLiveHTML__ = html;
+  })();
+
+  /* 2) Prepare placeholders --------------------------------------------------- */
+  let finishedHTML = '<p>Loading…</p>'; // today’s finished games (from archive)
+  let allTimeHTML  = '<p>Loading…</p>'; // all-time (from JSON)
+
+  /* 3) Create overlay + modal skeleton with tabs ----------------------------- */
+  const overlay = document.createElement('div');
+  overlay.id = 'lbOverlay';
+
+  const div = document.createElement('div');
+  div.id = 'lbModal';
+  div.innerHTML = `
+    <div id="lbModalHeader">
+      <h2>Leader Board</h2>
+      <button id="lbCloseX" title="Close leaderboard">✕</button>
+    </div>
+    <div id="lbTabs">
+      <button id="tabCurrent" class="active">Current</button>
+      <button id="tabAll">All&nbsp;Time</button>
+    </div>
+    <div id="lbCurrent">${(window.__lbLiveHTML__ || '') + (window.__lbFinishedHTML__ || '')}</div>
+    <div id="lbAll" class="hidden">${allTimeHTML}</div>
+    <button id="lbClose">Close</button>
+  `;
+  overlay.appendChild(div);
+  document.body.appendChild(overlay);
+
+  /* 4) Build "Finished today" from gameTrack.games --------------------------- */
+  (function buildFinishedFromArchive() {
+    const games = (gameTrack && gameTrack.games) ? gameTrack.games : {};
+    const currentGameId = Number(gameTrack?.currentGame) || 1;
+
+    let html = '';
+    const gameIds = Object.keys(games)
+      .map(n => parseInt(n, 10))
+      .filter(Number.isFinite)
+      .sort((a,b) => a - b);
+
+    // finished games are strictly less than currentGameId
+    const finished = gameIds.filter(id => id < currentGameId);
+
+    if (!finished.length) {
+      window.__lbFinishedHTML__ = '<p>No finished games yet today.</p>';
+    } else {
+      finished.forEach(id => {
+        const g = games[id] || { windows: [] };
+        const wins = Array.isArray(g.windows) ? g.windows : [];
+
+        html += `<div class="game-block"><h4>Game ${id}</h4>`;
+
+        if (!wins.length) {
+          html += '<p>—</p></div>';
+          return;
+        }
+
+        html += '<table><thead><tr><th>User</th><th>Type</th><th>W/L</th></tr></thead><tbody>';
+        wins.forEach(win => {
+          const callers = win.callers || [];
+          const winSet = new Set((win.winners || []).map(w => `${w.username}|${w.type}`));
+          callers.forEach(c => {
+            const key = `${c.username}|${c.type}`;
+            const wl  = winSet.has(key) ? 'W' : 'L';
+            html += `<tr><td>${c.username}</td><td>${String(c.type).toUpperCase()}</td><td>${wl}</td></tr>`;
+          });
+        });
+        html += '</tbody></table></div>';
+      });
+
+      window.__lbFinishedHTML__ = html;
+    }
+  })();
+
+  // Now render Current tab (live block + finished block we just built)
+  {
+    const cur = document.getElementById('lbCurrent');
+    if (cur) cur.innerHTML = (window.__lbLiveHTML__ || '') + (window.__lbFinishedHTML__ || '');
+  }
+
+  /* 5) Fetch & render ALL-TIME (JSON in /lb/game_stats_global.txt) ---------- */
+  fetch(`lb/game_stats_global.txt?ts=${Date.now()}`)
+    .then(res => (res.ok ? res.text() : ''))
+    .then(txt => {
+      let stats = {};
+      try { stats = txt ? JSON.parse(txt) : {}; } catch (_) { stats = {}; }
+
+      const types = ['horizontal','vertical','both','corners'];
+      const labels = { horizontal:'Horizontal', vertical:'Vertical', both:'Both', corners:'Corners' };
+
+      const buildRow = (o) =>
+        `<tr>
+           <td>${o.player}</td>
+           <td class="wlCell">${o.wins}</td>
+           <td class="wlCell">${o.losses}</td>
+         </tr>`;
+
+      let html = '';
+
+      types.forEach(tp => {
+        // Build list [{player, wins, losses, attempts}] for this type
+        const list = Object.entries(stats)
+          .map(([player, obj]) => {
+            const wins     = obj[tp] || 0;
+            const attempts = obj[tp + '_attempts'] ?? 0;
+            const losses   = Math.max(attempts - wins, 0);
+            return { player, wins, losses, attempts };
+          })
+          .filter(o => o.attempts > 0)
+          .sort((a,b) => b.wins - a.wins || a.losses - b.losses || a.player.localeCompare(b.player));
+
+        if (!list.length) return;
+
+        const top = list.slice(0, 5);
+        const rest = list.slice(5);
+
+        html += `<h3>${labels[tp]}</h3>
+          <table>
+            <thead><tr><th>Player</th><th>W</th><th>L</th></tr></thead>
+            <tbody>
+              ${top.map(buildRow).join('')}
+              ${
+                rest.length
+                  ? `<tr class="toggle-row">
+                       <td colspan="3" style="text-align:center;">
+                         <div class="more-wrap">
+                           <button class="more-btn" data-type="${tp}">Show all (${rest.length})</button>
+                         </div>
+                       </td>
+                     </tr>
+                     ${rest.map(o => `<tr class="hidden rest-${tp}">${buildRow(o).replace(/^<tr>/,'').replace(/<\/tr>$/,'')}</tr>`).join('')}`
+                  : ''
+              }
+            </tbody>
+          </table>`;
+      });
+
+      const all = document.getElementById('lbAll');
+      all.innerHTML = html || '<p>No data yet.</p>';
+
+      // Wire up accordion toggles
+      all.querySelectorAll('.more-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tp = btn.dataset.type;
+          const rows = all.querySelectorAll(`tr.rest-${tp}`);
+          const willShow = rows.length && rows[0].classList.contains('hidden');
+          rows.forEach(r => r.classList.toggle('hidden'));
+          btn.textContent = willShow ? 'Show less' : `Show all (${rows.length})`;
+        });
+      });
+    })
+    .catch(() => {
+      const all = document.getElementById('lbAll');
+      all.innerHTML = '<p>No data.</p>';
+    });
+
+  /* 6) Tab switching + close (bottom button, top X, outside click) ---------- */
+  const btnCur  = document.getElementById('tabCurrent');
+  const btnAll  = document.getElementById('tabAll');
+  const paneCur = document.getElementById('lbCurrent');
+  const paneAll = document.getElementById('lbAll');
+  const closeBottom = document.getElementById('lbClose');
+  const closeX = document.getElementById('lbCloseX');
+
+  function closeLb() {
+    const ov = document.getElementById('lbOverlay');
+    if (ov) ov.remove();
+  }
+
+  btnCur.addEventListener('click', () => {
+    btnCur.classList.add('active'); btnAll.classList.remove('active');
+    paneCur.classList.remove('hidden'); paneAll.classList.add('hidden');
+  });
+  btnAll.addEventListener('click', () => {
+    btnAll.classList.add('active'); btnCur.classList.remove('active');
+    paneAll.classList.remove('hidden'); paneCur.classList.add('hidden');
+  });
+
+  if (closeBottom) closeBottom.addEventListener('click', closeLb);
+  if (closeX) closeX.addEventListener('click', closeLb);
+
+  // click anywhere outside the modal to close (same pattern as chat)
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeLb();
+  });
+}
+
+
+      // ── AUTOMATIC WINNER ASSIGNMENT ──
+function autoAssignWinnersForWindow() {
+  const callers = Array.isArray(gameTrack?.callers) ? gameTrack.callers : [];
+  const winners = [];
+
+  // Build first-call timestamps (numbers; PHP now emits ms)
+  const firstTs = { horizontal: null, vertical: null, both: null, corners: null };
+  callers.forEach(c => {
+    const t = c.type;
+    const ts = Number(c.ts || 0);
+    if (t in firstTs) {
+      if (firstTs[t] === null || ts < firstTs[t]) firstTs[t] = ts;
+    }
+  });
+
+
+// --- Compute bingo2Ts the same way the server does ---
+const bingosSoFar = Number(gameTrack?.gameState?.bingos ?? 0);
+const haveH = (gameTrack?.bingoTypes || []).includes('horizontal');
+const haveV = (gameTrack?.bingoTypes || []).includes('vertical');
+
+let bingo2Ts = null;
+if (firstTs.both != null) {
+  bingo2Ts = firstTs.both;
+} else if (bingosSoFar >= 2) {
+  bingo2Ts = 0; // already at 2 before the window
+} else if (bingosSoFar === 1) {
+  const needH = !haveH, needV = !haveV;
+  if (needH && firstTs.horizontal != null) bingo2Ts = firstTs.horizontal;
+  else if (needV && firstTs.vertical != null) bingo2Ts = firstTs.vertical;
+} else {
+  if (firstTs.horizontal != null && firstTs.vertical != null) {
+    bingo2Ts = Math.max(firstTs.horizontal, firstTs.vertical);
+  }
+}
+
+// --- Corners: award only if it happens before (or there is no) bingo2Ts ---
+if ((gameTrack?.gameState?.corners ?? 0) < 1 && firstTs.corners != null) {
+  const firstCorners = callers.find(c => c.type === 'corners');
+  if (firstCorners && (bingo2Ts === null || firstTs.corners <= bingo2Ts)) {
+    winners.push({ username: firstCorners.username, type: 'corners' });
+  }
+}
+
+
+
+  // Bingo assignment (unchanged)
+  const both = callers.find(c => c.type === 'both');
+  if (both) {
+    winners.push({ username: both.username, type: 'both' });
+  } else {
+    const firstH = callers.find(c => c.type === 'horizontal');
+    const firstV = callers.find(c => c.type === 'vertical');
+    if (firstH) winners.push({ username: firstH.username, type: 'horizontal' });
+    if (firstV) winners.push({ username: firstV.username, type: 'vertical' });
+  }
+
+  // Post winners
+  winners.forEach(w =>
+    fetch('update_game_track.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=win&user=${encodeURIComponent(w.username)}&type=${encodeURIComponent(w.type)}`
+    })
+  );
+}
+
+
+function showWinnerAnnouncement(user, type) {
+if (window._hasAnnounced) return;   // <— bail if shown
+  window._hasAnnounced = true;        // <— mark it
+    const msg = `🎉 ${user} wins ${type.toUpperCase()}!`;
+    announce(`<div class="alert-message">${msg}</div>`, 5000);
+    disableAllButtons();
+
+  setTimeout(() => {
+
+   // ── AUTO-RESTART for first bingo/corners (only on the host!) ──
+   const ctrlDeck = document.getElementById('controlDeck');
+   if (
+     getComputedStyle(ctrlDeck).display === 'block' &&
+     type !== 'both' &&
+     gameTrack?.gameState?.bingos < 2
+   ) {
+fetch('update_game_track.php', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+     body: 'action=start'
+ }); // Rely on poll() to see the state change and kick ticker
+   }
+
+    // ── SHOW LB on true game-over ──
+    if (gameTrack?.gameState?.bingos >= 2) {
+      if (canTouchAnnouncements()) {
+      showLeaderboard();
+      }
+    }
+  }, 5000);  // match your 5s announcement
+}
+
+      function showError() {
+
+        const msg = 'Not so fast quick draw - check again!'
+        announce1(`<div class="alert-message">${msg}</div>`, 5000);
+      }
+
+
+function startCountdown(type) {
+  let c = 5;
+  document.getElementById('announcement').innerHTML =
+    `<div style='font-weight:bold;'>${type === 'corners' ? 'CORNERS!!!' : 'BINGO!!!'}</div>`;
+
+ if (--c < 0) {
+  clearInterval(iv);
+  clearInterval(selectionInterval);
+  selectionInterval = null;
+
+  // Force server to adjudicate this window now (close window).
+// Safe to call multiple times; server logic is idempotent.
+fetch('update_game_track.php', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: 'action=start'
+}).catch(()=>{});
+
+  if (['horizontal','vertical','both'].includes(type)) {
+    window.bingoWindowExpired = true;
+  } else if (type === 'corners') {
+    window.cornersWindowExpired = true;
+  }
+
+  // Release local locks ~250ms after close (unchanged)
+  setTimeout(() => {
+    const me = localStorage.getItem('username');
+    if (['horizontal','vertical','both'].includes(type)) {
+      if (window._submittedBingoTypes && window._submittedBingoTypes.has(type)) {
+        if (window._lastWinningType === type && window._lastWinner !== me) {
+          onBingoWindowEndWithoutWin(type);
+        }
+        if (!window._lastWinningType || window._lastWinningType !== type) {
+          onBingoWindowEndWithoutWin(type);
+        }
+      }
+    } else if (type === 'corners') {
+      if (window._submittedCorners && window._submittedCorners.has('corners')) {
+        onCornersWindowEndWithoutWin();
+      }
+    }
+  }, 250);
+
+// assign
+if (!window._autoAssigned) {
+  window._autoAssigned = true;
+  autoAssignWinnersForWindow();
+}
+
+  // —— NEW: Determining phase —— //
+  showDeterminingBanner();
+  window._determineUntil = Date.now() + 5000;
+
+  // After determining phase, pull latest state and fire ONE grouped banner.
+  setTimeout(async () => {
+    try {
+      const latest = await fetchJSONSafe('get_game_track.php');
+      if (latest && latest.gameState) gameTrack = latest;
+    } catch (_) { /* keep current gameTrack */ }
+
+    // Use the grouped path you already have (includes sound + LB handoff)
+    window._hasAnnounced = false; // allow grouped banner once
+    announceGroupedOnce(gameTrack, {
+      schedulePostAnnouncement
+    });
+
+    // clear the determining flags so next window is clean
+    window._determiningShown = false;
+    window._determineUntil   = 0;
+  }, 5000);
+
+  return;
+}
+}
+
+
+      async function bingoAttempt() {
+        const all = [...document.querySelectorAll('#mainDeck .card')];
+        const pr  = currentPR(), rows = Math.floor(all.length/pr);
+        const grid = [];
+        for (let r=0; r<rows; r++) {
+          grid.push(all.slice(r*pr, (r+1)*pr));
+        }
+        const isH = grid.some(row => row.every(c=>c.classList.contains('active')));
+        const isV = [...Array(pr).keys()].some(c =>grid.every(row => !row[c] || row[c].classList.contains('active')));
+        if (isH && isV) {                       // player has both patterns
+          if (!horizontalClaimed && !verticalClaimed) return 'both';
+          if (!horizontalClaimed) return 'horizontal';
+          if (!verticalClaimed)   return 'vertical';
+        }
+        if (isH && !horizontalClaimed) return 'horizontal';
+        if (isV && !verticalClaimed)   return 'vertical';
+        showError();
+        return false;
+      }
+function renderDeck() {
+  // clear win glow
+  document.querySelectorAll('#mainDeck .win-glow').forEach(el => el.classList.remove('win-glow'));
+
+  const deck = document.getElementById('mainDeck');
+  deck.innerHTML = '';
+
+  if (isSquareMode()) {
+    // Square board: use numbers + 🃏, grid CSS, centered
+    const n = currentPR();                 // n×n
+    deck.classList.add('square');
+    deck.style.setProperty('--cols', n);
+    deck.style.height = 'auto';
+
+    // build numeric ids 1..(n*n - 1)
+    const numeric = Array.from({length: n*n - 1}, (_,i)=> String(i+1));
+    const shuffled = shuffle(numeric);
+
+    // pick a non-corner index for wildcard
+    const total = n*n;
+    const corners = new Set([0, n-1, total-n, total-1]);
+    let freeIndex;
+    do { freeIndex = Math.floor(Math.random()*total); } while (corners.has(freeIndex));
+    shuffled.splice(freeIndex, 0, '__WILD__');
+
+    // render tiles
+    shuffled.forEach(val => {
+      const li = document.createElement('li');
+      li.className = 'card';
+      if (val === '__WILD__') {
+        li.id = 'wildcard';
+        li.dataset.wildcard = true;
+        li.innerHTML = '<p>🃏</p>';     // joker for square modes
+        li.classList.add('active');
+      } else {
+        li.id = `num-${val}`;
+        li.innerHTML = `<p>${val}</p>`;
+      }
+      deck.appendChild(li);
+    });
+
+    return;
+  }
+
+  // ── OG board (unchanged layout & emoji) ─────────────────────────────
+  deck.classList.remove('square');
+  deck.style.removeProperty('--cols');
+  deck.style.height = '662px'; // keep your current height
+
+  // 1) start with all IDs except 'free'
+  const titles = idArray.filter(id => id !== 'free');
+
+  // 2) shuffle them
+  const shuffled = shuffle(titles);
+
+  // 3) compute where to put the free-space
+  const perRow = 9;
+  const total  = shuffled.length + 1; // 54
+  const corners = new Set([0, perRow - 1, total - perRow, total - 1]);
+
+  let freeIndex;
+  do { freeIndex = Math.floor(Math.random() * total); } while (corners.has(freeIndex));
+
+  // 4) insert 'free' at that safe position
+  shuffled.splice(freeIndex, 0, 'free');
+
+  // 5) render all cards
+  shuffled.forEach(id => {
+    const li = document.createElement('li');
+    li.className = 'card';
+    if (id === 'free') {
+      li.id = 'wildcard';
+      li.dataset.wildcard = true;
+      li.innerHTML = '<p>🔄</p>'; // keep OG emoji
+      li.classList.add('active');
+    } else {
+      li.id = id;
+      li.innerHTML = connectionArray[id];
+    }
+    deck.appendChild(li);
+  });
+
+  // 6) refresh remaining-positions pool (unchanged)
+  const totalCards = deck.children.length;
+  window.remainingPositions = shuffle(
+    Array.from({ length: totalCards }, (_, idx) => idx)
+  );
+}
+
+
+
+      function selectRandomTitle() {
+        if (!window.remaining) {
+          window.remaining = shuffle(idArray.slice());
+        }
+        if (!window.remaining.length) {
+          clearInterval(selectionInterval);
+          const msg = 'All titles called!';
+          announce(`<div class="alert-message">${msg}</div>`, 4000);
+          return;
+        }
+        const nxt = window.remaining.pop();
+        document.getElementById(nxt).classList.add('active');
+        renderHighlights();
+      }
+
+      function showCallersModal() {
+        document.getElementById('callersModal').style.display = 'block';
+      }
+      function hideCallersModal() {
+        document.getElementById('callersModal').style.display = 'none';
+      }
+      function shuffle(a) {
+        for (let i=a.length-1; i>0; i--) {
+          const j = Math.floor(Math.random()*(i+1));
+          [a[i],a[j]] = [a[j],a[i]];
+        }
+        return a;
+      }
+
+      /**
+       * Highlights tiles for the completed horizontal/vertical/both/corners pattern.
+       * If options.winnerOnly is true, we show just ONE matching line for that type.
+       */
+function highlightPattern(type, options = {}) {
+  const winnerOnly = options.winnerOnly === true;
+  const append     = options.append === true;
+
+  // ⬇️ only clear if we are NOT appending
+  if (!append) {
+    clearPatternGlow();
+  }
+
+  if (!type) return;
+
+const cards = Array.from(document.querySelectorAll('#mainDeck .card'));
+const perRow = currentPR();
+  let winners = [];
+
+        // helper: test line complete
+        function isLineComplete(line) {
+          let active = 0, hasWildcard = false;
+          for (const c of line) {
+            if (c.classList.contains('active')) active++;
+            else if (c.dataset.wildcard === 'true' || c.dataset.wildcard === true) hasWildcard = true;
+          }
+          return (active === line.length) || (active === line.length - 1 && hasWildcard);
+        }
+
+        // collect all matching rows (or first one, if winnerOnly)
+        function collectRows() {
+          const found = [];
+          for (let r = 0; r < cards.length; r += perRow) {
+            const row = cards.slice(r, r + perRow);
+            if (isLineComplete(row)) {
+              found.push(row);
+              if (winnerOnly) break;
+            }
+          }
+          return found.flat();
+        }
+        // collect all matching columns (or first one, if winnerOnly)
+        function collectCols() {
+          const found = [];
+          for (let c = 0; c < perRow; c++) {
+            const col = [];
+            for (let idx = c; idx < cards.length; idx += perRow) col.push(cards[idx]);
+            if (isLineComplete(col)) {
+              found.push(col);
+              if (winnerOnly) break;
+            }
+          }
+          return found.flat();
+        }
+
+        if (type === 'horizontal' || type === 'both') {
+          winners.push(...collectRows());
+        }
+        if (type === 'vertical' || type === 'both') {
+          winners.push(...collectCols());
+        }
+        if (type === 'corners') {
+          const last = cards.length - 1;
+          const cornerTiles = [ cards[0], cards[perRow - 1], cards[last - (perRow - 1)], cards[last] ];
+          if (cornerTiles.every(c => c.classList.contains('active'))) winners = cornerTiles;
+        }
+
+        // apply glow per tile, matching its <p> color (unchanged)
+        winners.forEach(tile => {
+          const p = tile.querySelector('p');
+          const themeColor = p ? getComputedStyle(p).color : '#FFD700';
+          tile.style.setProperty('--theme-color', themeColor);
+          tile.classList.add('win-glow');
+        });
+      }
+
+      function getWinnersByType(track) {
+  const map = { horizontal: new Set(), vertical: new Set(), both: new Set(), corners: new Set() };
+  (track?.winners || []).forEach(w => map[w.type]?.add(w.username));
+  return map;
+}
+
+function playerShouldSeeCorners(track, me) {
+  // If Corners already won, only the Corners winner keeps the highlight.
+  const won = (track?.gameState?.corners ?? 0) >= 1;
+  if (!won) return true; // still available to everyone
+  const winners = getWinnersByType(track).corners;
+  return winners.has(me);
+}
+
+function playerShouldSeeBingoType(track, me, type) {
+  // type is 'horizontal' or 'vertical' (or 'both' when choosing pattern to glow)
+  // If that type (or equivalent) has already been won by someone else, we still want to
+  // show the winner's glow, but not show it to others as "available".
+  const taken = (track?.bingoTypes || []);
+  const winners = getWinnersByType(track);
+  const someoneWonThisType =
+    taken.includes(type) || (type === 'horizontal' && winners.horizontal.size) ||
+    (type === 'vertical' && winners.vertical.size) ||
+    (type === 'both' && winners.both.size);
+
+  const iWonThisType =
+    winners[type]?.has(me) ||
+    (type === 'horizontal' && winners.both.has(me)) ||
+    (type === 'vertical'   && winners.both.has(me));
+
+  // Show if it's not taken yet, or if I am the winner of that type
+  return !someoneWonThisType || iWonThisType;
+}
+
+
+/**
+ * Scans the “active” cards for a local bingo/corners pattern
+ * and returns one of: 'horizontal','vertical','both','corners', or null.
+ */
+function detectPatternType() {
+const cards  = Array.from(document.querySelectorAll('#mainDeck .card'));
+const perRow = currentPR();
+const rows   = Math.floor(cards.length / perRow);
+  
+  if (!cards.length) return null;
+
+  // Build 2D grid
+  const grid = [];
+  for (let r = 0; r < rows; r++) {
+    grid.push(cards.slice(r * perRow, r * perRow + perRow));
+  }
+
+  // Helper: returns true if every tile in `line` is active,
+    function isLineComplete(line) {
+      let active = 0, hasWildcard = false;
+      for (const c of line) {
+        if (c.classList.contains('active')) {
+          active++;
+        } else if (c.dataset && (c.dataset.wildcard === 'true' || c.dataset.wildcard === true)) {
+          hasWildcard = true;
+        }
+      }
+      return (active === line.length) || (active === line.length - 1 && hasWildcard);
+    }
+
+
+  // Horizontal?
+  const isH = grid.some(row => isLineComplete(row));
+
+  // Vertical?
+  let isV = false;
+  for (let col = 0; col < perRow; col++) {
+    const column = grid.map(row => row[col]);
+    if (isLineComplete(column)) {
+      isV = true;
+      break;
+    }
+  }
+
+  // Corners (unchanged: wildcard never on corners)
+  const last = cards.length - 1;
+  const isC = (
+    cards[0].classList.contains('active') &&
+    cards[perRow - 1].classList.contains('active') &&
+    cards[last - (perRow - 1)].classList.contains('active') &&
+    cards[last].classList.contains('active')
+  );
+
+  // Priority
+  if (isH && isV) return 'both';
+  if (isH)         return 'horizontal';
+  if (isV)         return 'vertical';
+  if (isC)         return 'corners';
+  return null;
+}
+
+function hasHorizontal() {
+const all = Array.from(document.querySelectorAll('#mainDeck .card'));
+const pr = currentPR(), rows = Math.floor(all.length/pr);
+  for (let r=0; r<rows; r++) {
+    const row = all.slice(r*pr, (r+1)*pr);
+    if (row.every(c => c.classList.contains('active'))) return true;
+  }
+  return false;
+}
+function hasVertical() {
+const all = Array.from(document.querySelectorAll('#mainDeck .card'));
+const pr = currentPR(), rows = Math.floor(all.length/pr);
+  for (let c=0; c<pr; c++) {
+    let ok = true;
+    for (let r=0; r<rows; r++) {
+      const cell = all[r*pr + c];
+      if (!cell || !cell.classList.contains('active')) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  return false;
+}
+function hasCorners() {
+const cards = Array.from(document.querySelectorAll('#mainDeck .card'));
+const pr = currentPR(), last = cards.length - 1;
+  if (!cards.length) return false;
+  const corners = [ cards[0], cards[pr-1], cards[last-(pr-1)], cards[last] ];
+  return corners.every(c => c && c.classList.contains('active'));
+}
+
+
+      // Triple‑click handler…
+      let triple = 0;
+      document.querySelectorAll('#legendDeck2 .skyBg').forEach(el =>
+        el.addEventListener('click', () => {
+          triple++;
+          if (triple === 3) document.getElementById('controlDeck').style.display = 'block';
+          setTimeout(() => { triple = 0; }, 400);
+        })
+      );
+
+async function poll() {
+  try {
+const updated = await fetchJSONSafe('get_game_track.php');
+
+    // length of old arrays (0 if gameTrack was null/unset)
+    const oldCalledLen  = gameTrack?.called?.length      ?? 0;
+    const oldAnnTs      = gameTrack?.announcement?.ts    ?? 0;
+    const oldBingoTypes = gameTrack?.bingoTypes          ?? [];
+    const oldWinners    = gameTrack?.winners             ?? [];
+    const oldHoldUntil  = gameTrack?.holdUntil           ?? null;
+
+    const oldState     = gameTrack?.gameState?.state   ?? '';
+    const oldBingos    = gameTrack?.gameState?.bingos  ?? 0;
+    const oldCornersCt = gameTrack?.gameState?.corners ?? 0;
+
+    if (
+        updated.gameState.state                 !== oldState    ||
+        updated.gameState.bingos                !== oldBingos   ||
+        updated.gameState.corners               !== oldCornersCt||
+        updated.called.length                   !== oldCalledLen||
+        updated.announcement.ts                 !== oldAnnTs    ||
+        JSON.stringify(updated.bingoTypes)      !== JSON.stringify(oldBingoTypes) ||
+        JSON.stringify(updated.winners)         !== JSON.stringify(oldWinners)    ||
+        updated.holdUntil                       !== oldHoldUntil
+    ) {
+      gameTrack = updated;
+        if (updated.gameState && updated.gameState.state === 'Reset') {
+        const m = document.getElementById('lbModal');
+        if (m) m.remove();
+        }
+      handleGameTrack(gameTrack);
+    }
+  } catch (err) {
+    console.error('poll failed', err);
+  } finally {
+    // ---- heartbeat: nudge server to auto-close stale _pending windows ----
+(function heartbeatCloseWindow() {
+  try {
+    const st = gameTrack?.gameState?.state || '';
+    const winStartMs = Number(gameTrack?.windowStartTs || 0);
+    if (!st.endsWith('_pending') || !winStartMs) return;
+
+    const elapsed = Date.now() - winStartMs;
+    if (elapsed < 5200) return;
+
+    // only once per window (keyed by the start timestamp)
+    if (!window.__heartbeatSent) window.__heartbeatSent = new Set();
+    const key = String(winStartMs);
+    if (window.__heartbeatSent.has(key)) return;
+    window.__heartbeatSent.add(key);
+
+    // ping the server; your pre-switch timeout in update_game_track.php will flip this to 'start'
+    fetch('update_game_track.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=ping'
+    }).catch(() => {});
+  } catch (_) {}
+})();
+
+    setTimeout(poll, 1000);
+  }
+}
+poll();
+
+
+    </script>
+  </div>
+<script>
+  function resizeApp() {
+    const wrap = document.querySelector('.centerWrap');
+    const scaleX = window.innerWidth  / 968;
+    const scaleY = window.innerHeight / wrap.clientHeight;
+    const scale  = Math.min(scaleX, scaleY, 1);
+    wrap.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    resizeApp();
+    document.querySelector('.centerWrap').style.visibility = 'visible';
+  });
+  window.addEventListener('resize', resizeApp);
+</script>
+</div>
+<script>
+  function adjustLayout() {
+    const centerWrap = document.querySelector('.centerWrap');
+    const viewportHeight = window.innerHeight;
+    const contentHeight = centerWrap.scrollHeight;
+    
+    if (contentHeight > viewportHeight * 0.9) {
+      centerWrap.style.minHeight = 'auto';
+      centerWrap.style.padding = '2vh 0';
+    } else {
+      centerWrap.style.minHeight = '90vh';
+      centerWrap.style.padding = '0';
+    }
+  }
+
+   // --- Mobile CSS overrides for Android/iOS ---
+  function applyMobileOverrides() {
+    var isAndroid = /Android/i.test(navigator.userAgent);
+    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!(isAndroid || isIOS)) return;
+
+    // 1. Base font bump (Keep this)
+    document.body.style.fontSize = '19px';
+
+    // 2. Make Inputs and Submit button tappable (Keep this)
+    var input = document.getElementById('usernameInput');
+    var submit = document.getElementById('usernameSubmit');
+    if (input) input.style.fontSize = '1.75em';
+    if (submit) submit.style.fontSize = '1.75em';
+
+    // 3. Leaderboard Button Sizing (Fixes "button is very small")
+    // We add this specific check to bump the Leaderboard button size slightly on mobile
+    var lbBtn = document.querySelector('#usernameSection .card.lb');
+    if (lbBtn) {
+        lbBtn.style.fontSize = '1.75em';
+        lbBtn.style.padding = '0.25em 0.75em';
+    }
+
+    // --- DELETED: The 'That's Me' font resize (Fixes "Too Big") ---
+    // The default CSS clamp() handles this better.
+
+    // --- DELETED: The Card resize (Fixes "7 columns") ---
+    // Removing the 110px force allows them to fit 9-across (968px / 9 ≈ 100px).
+
+    // 4. Legend buttons (Optional: Keep huge buttons in the legend if you like them)
+    document.querySelectorAll('#legendDeck ul > li:nth-child(-n+4)').forEach(li => {
+      li.style.width = '200px';
+      li.style.height = '200px';
+    });
+
+    // 5. Announcement text size (Keep this)
+    var ann = document.getElementById('announcement');
+    if (ann) ann.style.fontSize = '1em';
+
+    // 6. Top padding adjustment (Keep this)
+    var centerWrap = document.querySelector('.centerWrap');
+    if (centerWrap) centerWrap.style.paddingTop = '48px';
+  }
+  
+  
+  // Call initially and after major changes
+  adjustLayout();
+  applyMobileOverrides(); // <--- Add this line
+
+</script>
+<script>
+// very simple iOS sniff (covers iPhone, iPad, iPod + pointer‑coalescing on new Macs)
+const isIOS = /iP(hone|od|ad)/.test(navigator.platform) ||
+              (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
+
+if (isIOS) {
+  document.querySelectorAll('.card, button').forEach(el => {
+    el.addEventListener('touchstart', () => el.classList.add('pressed'));
+    el.addEventListener('touchend',   () => el.classList.remove('pressed'));
+    el.addEventListener('touchcancel',() => el.classList.remove('pressed'));
+  });
+}
+</script>
+
+<script>
+/*
+  Voice module – mesh audio room for Refresh Bingo
+  Uses voice.php for:
+    - online user list
+    - signaling messages (offer/answer/candidates)
+*/
+
+(function () {
+  const SIGNAL_URL = 'voice.php';
+
+  let myName = null;
+  let hasInit = false;
+
+  let micStream = null;      // local mic stream from toggleMic
+  let audioEnabled = true;   // controlled by your sound toggle
+
+  const peers = {};          // name -> RTCPeerConnection
+  const remoteAudioEls = {}; // name -> <audio>
+  const hasOfferedTo = {};   // name -> bool (to avoid duplicate offers)
+  const pendingCandidates = {}; // name -> [RTCIceCandidate]
+
+
+  function log(...args) {
+    console.log('[VOICE]', ...args);
+  }
+
+  function heartbeat() {
+    if (!myName) return;
+    fetch(SIGNAL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'heartbeat',
+        user: myName
+      })
+    }).catch(() => {});
+  }
+
+  function sendSignal(to, data) {
+    if (!myName) return;
+    return fetch(SIGNAL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'send',
+        user: myName,
+        to,
+        data
+      })
+    }).catch(err => console.error('sendSignal error', err));
+  }
+
+  function pollUsers() {
+    if (!myName) return;
+    fetch(SIGNAL_URL + '?action=list&user=' + encodeURIComponent(myName))
+      .then(r => r.json())
+      .then(list => {
+        if (!Array.isArray(list)) return;
+        list.forEach(name => {
+          if (name && name !== myName) {
+            ensurePeerConnection(name);
+          }
+        });
+      })
+      .catch(err => console.error('pollUsers error', err))
+      .finally(() => {
+        setTimeout(pollUsers, 3000); // every 3s
+      });
+  }
+
+  function pollSignals() {
+    if (!myName) return;
+    fetch(SIGNAL_URL + '?action=recv&user=' + encodeURIComponent(myName))
+      .then(r => r.json())
+      .then(messages => {
+        if (!Array.isArray(messages)) return;
+        messages.forEach(handleSignalMessage);
+      })
+      .catch(err => console.error('pollSignals error', err))
+      .finally(() => {
+        setTimeout(pollSignals, 1000); // every second
+      });
+  }
+
+    function flushPendingCandidates(name) {
+    const pc = peers[name];
+    const queue = pendingCandidates[name];
+    if (!pc || !queue || !queue.length) return;
+
+    queue.forEach(cand => {
+      pc.addIceCandidate(cand).catch(err =>
+        console.error('addIceCandidate (flush) error', err)
+      );
+    });
+    pendingCandidates[name] = [];
+  }
+
+    function handleSignalMessage(msg) {
+    const from = msg.from;
+    const data = msg.data;
+    if (!from || !data) return;
+
+    const pc = ensurePeerConnection(from);
+
+    if (data.type === 'offer') {
+      log('got offer from', from);
+      pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
+        .then(() => pc.createAnswer())
+        .then(answer => {
+          return pc.setLocalDescription(answer).then(() => {
+            return sendSignal(from, {
+              type: 'answer',
+              sdp: pc.localDescription
+            });
+          });
+        })
+        .then(() => {
+          flushPendingCandidates(from);
+        })
+        .catch(err => console.error('handle offer error', err));
+    } else if (data.type === 'answer') {
+      log('got answer from', from);
+      if (!pc.currentRemoteDescription) {
+        pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
+        .then(() => {
+            flushPendingCandidates(from);
+          })
+          .catch(err => console.error('setRemoteDescription(answer) error', err));
+      }
+    } else if (data.type === 'candidate') {
+      if (data.candidate) {
+        const ice = new RTCIceCandidate(data.candidate);
+
+        // if we already have a remoteDescription, add immediately
+        if (pc.remoteDescription && pc.remoteDescription.type) {
+          pc.addIceCandidate(ice).catch(err =>
+            console.error('addIceCandidate error', err)
+          );
+        } else {
+          // otherwise queue until SDP is set
+          if (!pendingCandidates[from]) pendingCandidates[from] = [];
+          pendingCandidates[from].push(ice);
+          log('queued ICE candidate from', from, 'until remoteDescription is set');
+        }
+      }
+    }
+
+  }
+
+  function getOrCreateAudioEl(name) {
+    if (remoteAudioEls[name]) return remoteAudioEls[name];
+    const audio = document.createElement('audio');
+    audio.autoplay = true;
+    audio.playsInline = true;
+    audio.muted = !audioEnabled;
+    audio.style.display = 'none'; // hidden, just for sound
+    document.body.appendChild(audio);
+    remoteAudioEls[name] = audio;
+    return audio;
+  }
+
+  function ensurePeerConnection(name) {
+    if (peers[name]) return peers[name];
+
+    log('create RTCPeerConnection for', name);
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    peers[name] = pc;
+
+    if (!pendingCandidates[name]) pendingCandidates[name] = [];
+
+    pc.onicecandidate = (ev) => {
+      if (ev.candidate) {
+        sendSignal(name, { type: 'candidate', candidate: ev.candidate });
+      }
+    };
+
+    pc.ontrack = (ev) => {
+      log('ontrack from', name);
+      const audioEl = getOrCreateAudioEl(name);
+      audioEl.srcObject = ev.streams[0];
+    };
+
+    if (micStream) {
+      micStream.getTracks().forEach(t => {
+        pc.addTrack(t, micStream);
+      });
+    }
+
+    // Simple glare-avoid: only lexicographically smaller username starts offer
+    if (micStream && myName && myName < name && !hasOfferedTo[name]) {
+      hasOfferedTo[name] = true;
+      pc.createOffer()
+        .then(offer => {
+          return pc.setLocalDescription(offer).then(() => {
+            return sendSignal(name, { type: 'offer', sdp: pc.localDescription });
+          });
+        })
+        .catch(err => console.error('createOffer error', err));
+    }
+
+    return pc;
+  }
+
+  function addMicToAllPeers() {
+    if (!micStream) return;
+    Object.keys(peers).forEach(name => {
+      const pc = peers[name];
+      // Only add if this PC currently has no senders (avoid dupes)
+      if (pc.getSenders().length === 0) {
+        micStream.getTracks().forEach(t => {
+          pc.addTrack(t, micStream);
+        });
+        if (myName && myName < name && !hasOfferedTo[name]) {
+          hasOfferedTo[name] = true;
+          pc.createOffer()
+            .then(offer => {
+              return pc.setLocalDescription(offer).then(() => {
+                return sendSignal(name, { type: 'offer', sdp: pc.localDescription });
+              });
+            })
+            .catch(err => console.error('createOffer error', err));
+        }
+      }
+    });
+  }
+
+  // PUBLIC API
+  window.Voice = {
+    init(username) {
+      if (hasInit) return;
+      if (!username) return;
+      myName = username;
+      hasInit = true;
+
+      log('init for', username);
+
+      heartbeat();
+      setInterval(heartbeat, 8000);
+
+      pollUsers();
+      pollSignals();
+    },
+
+    setMicStream(stream) {
+      micStream = stream || null;
+      if (micStream) {
+        addMicToAllPeers();
+      }
+    },
+
+    clearMicStream() {
+      micStream = null;
+      // We don't close PCs, just stop sending. Remote side will stop hearing you.
+      Object.values(peers).forEach(pc => {
+        pc.getSenders().forEach(sender => {
+          try { sender.track && sender.track.stop(); } catch (e) {}
+        });
+      });
+    },
+
+    setAudioEnabled(enabled) {
+      audioEnabled = !!enabled;
+      Object.values(remoteAudioEls).forEach(audio => {
+        audio.muted = !audioEnabled;
+      });
+    }
+  };
+})();
+</script>
+
+  <!-- WALLET GATE OVERLAY -->
+  <div id="gateOverlay">
+    <img src="RF5.png" alt="Fre5h Logo" class="brand-logo">
+
+    <header>
+      <div class="container">
+        <!-- 🔁 Update this title per app -->
+        <h1 class="backups-logo-text">
+          <span class="backups-logo-text-main">Refresh Bingo</span>
+          <span class="backups-logo-beta">BETA</span>
+        </h1>
+
+        <p id="description">
+          Where Web3 & Fun come to hang! 
+        </p>
+
+        <p id="instructions"></p>
+
+        <div class="row" id="connectRow">
+          <select id="walletSelect">
+            <option value="">Select Wallet…</option>
+          </select>
+          <button id="connectBtn" disabled>Connect Wallet</button>
+        </div>
+
+        <div id="walletStatus" class="hidden"></div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="gate-card">
+        <h2>Details</h2>
+
+        <!-- 🔁 You said you'll update this section text yourself -->
+        <div class="access-steps">
+          <h3 class="gate-subtitle">How access works</h3>
+          <ul class="gate-list">
+            <li>OG The Refresh collection hodlers have VIP access with no entrance fee.</li>
+            <li>Non-hodlers can pay2play: 5₳ = 1 game, 15₳ = 4 games.</li>
+            <li>Connect the same wallet to play purchased games from different devices</li>
+            <li>Play purchased games any regular Refresh Bingo night. Standard priced purchases are not valid for special events.</li>
+            <li>After access is granted, the app unlocks for this wallet.</li>
+          </ul>
+        </div>
+
+        <p id="gateBlurb" class="loc-hint"></p>
+        <p id="accessMessage" class="access-message"></p>
+
+        <!-- Button is used both for "Pay & enter" and "Enter app" -->
+        <button
+          id="payAccessBtn"
+          class="loc-btn-primary"
+          style="display:none; margin-top:0.75rem;"
+        >
+          Pay &amp; enter app
+        </button>
+
+        <div class="loc-legal">
+          <p class="loc-legal-text">
+            This gate checks your wallet for specified policy holdings and optionally charges an ADA transaction to unlock access. No private keys are ever shared.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GATE SCRIPT ONLY – app logic will live separately -->
+  <script type="module">
+    import { BrowserWallet, Transaction } from '/meshsdk-core-1.9.0-b62.js';
+
+    const walletSelect    = document.getElementById('walletSelect');
+    const connectBtn      = document.getElementById('connectBtn');
+    const walletStatusEl  = document.getElementById('walletStatus');
+    const instructionsEl  = document.getElementById('instructions');
+    const gateBlurbEl     = document.getElementById('gateBlurb');
+    const accessMessageEl = document.getElementById('accessMessage');
+    const gateOverlay     = document.getElementById('gateOverlay');
+    const protectedArea   = document.getElementById('protectedArea');
+    const payAccessBtn    = document.getElementById('payAccessBtn');
+
+    // 🔁 Same address you already use for gate payments
+    const GATE_RECIPIENT_ADDRESS =
+      'addr1q9m2reerla2ccrkwz57rhwl7q8vj8y38x39nv4mq56ppjqmzs7jlke6nm3thlvvddtsnp52s62u0337y9h6d2gmma2wsmjx8nh';
+
+    // 🔁 Flat gate fee for non-VIP wallets (adjust per app if needed)
+    const GATE_ACCESS_FEE_ADA = 10;
+
+    // 🔁 VIP requirements (same Refresh whale policy / count)
+    const ACCESS_POLICIES = [
+      {
+        policyId: 'adc5716393953403109c335e68c0384238fd19653e960e03afa1fb1f',
+        minAssets: 25,
+        label: 'OG The Refresh',
+        purchaseUrl: 'https://www.jpg.store/collection/therefresh'
+      }
+    ];
+
+    let meshWallet    = null;
+    let userAddress   = null;
+    let userIdentity  = null;
+    let isVipHolder   = false;
+    let hasPaidAccess = false;
+
+    function shortenAddress(addr) {
+      if (!addr || typeof addr !== 'string') return '–';
+      if (addr.length <= 16) return addr;
+      return addr.slice(0, 8) + '…' + addr.slice(-8);
+    }
+
+    function buildRequirementsLine() {
+      return ACCESS_POLICIES
+        .map(p => `${p.minAssets} ${p.label}`)
+        .join(' + ');
+    }
+
+    function buildRequirementsDetail(foundMap) {
+      return ACCESS_POLICIES
+        .map(p => {
+          const found = foundMap[p.policyId] ?? 0;
+          return `${p.label}: ${found} / ${p.minAssets}`;
+        })
+        .join('\n');
+    }
+
+    function getPrimaryPurchaseUrl() {
+      return (ACCESS_POLICIES[0] && ACCESS_POLICIES[0].purchaseUrl) || 'https://www.jpg.store/';
+    }
+
+    // Set gate text
+    instructionsEl.textContent = 'Connect a Cardano wallet to continue.';
+/* --- 1. Update the Gate Blurb --- */
+gateBlurbEl.innerHTML = 
+  `Gated by Fre5h Fence an F5 product. <a href="#" class="backups-inline-highlight" id="contactTrigger">Get in Touch</a>`;
+
+document.getElementById('contactTrigger').addEventListener('click', (e) => {
+    e.preventDefault();
+    openContactModal();
+});
+
+/* --- 2. Inject CSS --- */
+const styleSheet = document.createElement("style");
+styleSheet.innerText = `
+  #contact-modal-overlay {
+    display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+    width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px); justify-content: center; align-items: center;
+  }
+  #contact-modal-box {
+    background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+    padding: 25px; width: 90%; max-width: 400px; position: relative;
+    font-family: sans-serif; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .c-label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #aaa; font-weight: 600; }
+  .c-input {
+    width: 100%; background: #0f0f0f; border: 1px solid #333; border-radius: 6px;
+    padding: 10px; color: #eee; margin-bottom: 15px; font-family: inherit; box-sizing: border-box;
+  }
+  .c-input:read-only { color: #777; cursor: not-allowed; background: #151515; }
+  .c-input:focus { outline: none; border-color: #ff9a3c; }
+  
+  #c-send-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 6px;
+    font-weight: 700; font-size: 1rem; cursor: pointer;
+    background: linear-gradient(135deg, #ff9a3c, #ffd869);
+    color: #000; transition: opacity 0.2s;
+  }
+  #c-send-btn:hover { opacity: 0.9; }
+  #c-send-btn:disabled { background: #555; color: #888; cursor: wait; }
+
+  #c-close-btn {
+    position: absolute; top: 10px; right: 15px; font-size: 1.5rem;
+    color: #555; cursor: pointer; background: none; border: none;
+  }
+  #c-close-btn:hover { color: #fff; }
+`;
+document.head.appendChild(styleSheet);
+
+/* --- 3. Inject HTML --- */
+const modalHTML = `
+<div id="contact-modal-overlay">
+  <div id="contact-modal-box">
+    <button id="c-close-btn">&times;</button>
+    <h3 style="margin-top:0; margin-bottom: 20px; color:#fff;">Contact Support</h3>
+    <form id="contact-form">
+      <label class="c-label">Subject</label>
+      <input type="text" name="subject" class="c-input" value="Inquiry about Fre5h Fence" readonly>
+      <label class="c-label">Your Email</label>
+      <input type="email" name="email" class="c-input" placeholder="Enter your email..." required>
+      <label class="c-label">Message</label>
+      <textarea name="message" class="c-input" rows="4" placeholder="How can we help?" required></textarea>
+      <button type="submit" id="c-send-btn">SEND MESSAGE</button>
+    </form>
+  </div>
+</div>
+`;
+document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+/* --- 4. Logic --- */
+const modalOverlay = document.getElementById('contact-modal-overlay');
+const closeBtn = document.getElementById('c-close-btn');
+const contactForm = document.getElementById('contact-form');
+const sendBtn = document.getElementById('c-send-btn');
+
+function openContactModal() { modalOverlay.style.display = 'flex'; }
+function closeContactModal() { modalOverlay.style.display = 'none'; }
+
+closeBtn.addEventListener('click', closeContactModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeContactModal(); });
+
+// Handle Form Submit (Send to Local PHP File)
+contactForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(contactForm);
+    sendBtn.innerText = "Saving...";
+    sendBtn.disabled = true;
+
+    fetch('save_request.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            sendBtn.innerText = "Request Saved!";
+            sendBtn.style.background = "#4CAF50"; // Green
+            sendBtn.style.color = "#fff";
+            setTimeout(() => {
+                closeContactModal();
+                // Reset button
+                sendBtn.disabled = false;
+                sendBtn.innerText = "SEND MESSAGE";
+                sendBtn.style.background = "linear-gradient(135deg, #ff9a3c, #ffd869)";
+                sendBtn.style.color = "#000";
+                contactForm.reset();
+            }, 2000);
+        } else {
+            // If response is 500 or 403
+            sendBtn.innerText = "Server Error. Check Perms.";
+            sendBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        sendBtn.innerText = "Network Error";
+        sendBtn.disabled = false;
+        console.error('Error:', error);
+    });
+});
+    async function detectWallets() {
+      try {
+        const wallets = await BrowserWallet.getInstalledWallets();
+
+        if (!wallets.length) {
+          walletSelect.innerHTML = '<option>(no wallets detected)</option>';
+          return;
+        }
+
+        // Prefer "mesh" if present
+        wallets.sort((a, b) =>
+          a.id === 'mesh' ? -1 : b.id === 'mesh' ? 1 : 0
+        );
+
+        walletSelect.innerHTML = wallets
+          .map(w => `<option value="${w.id}">${w.name}</option>`)
+          .join('');
+
+        walletSelect.value = wallets[0].id;
+        connectBtn.disabled = false;
+      } catch (err) {
+        console.error('[Gate] wallet detection failed:', err);
+        walletSelect.innerHTML = '<option>(wallet detection failed)</option>';
+      }
+    }
+
+    async function deriveIdentity() {
+      if (!meshWallet) return null;
+
+      // Prefer stake / reward address if available
+      try {
+        const rewards = await meshWallet.getRewardAddresses();
+        if (Array.isArray(rewards) && rewards.length > 0) {
+          return rewards[0];
+        }
+      } catch (_) {}
+
+      // Fallback: change address
+      try {
+        const change = await meshWallet.getChangeAddress();
+        if (change) return change;
+      } catch (_) {}
+
+      return null;
+    }
+
+    async function getHolderMap() {
+      const found = {};
+      ACCESS_POLICIES.forEach(p => { found[p.policyId] = 0; });
+
+      if (!meshWallet) return found;
+
+      try {
+        const assets = await meshWallet.getAssets();
+        for (const a of assets) {
+          if (!a) continue;
+          const pid = a.policyId || (a.unit ? a.unit.slice(0, 56) : '');
+          if (!Object.prototype.hasOwnProperty.call(found, pid)) continue;
+
+          let qty = 0;
+          try {
+            qty = typeof a.quantity === 'string'
+              ? Number(a.quantity)
+              : Number(a.quantity ?? 0);
+          } catch (_) {}
+          if (!Number.isFinite(qty) || qty < 0) qty = 0;
+
+          found[pid] = (found[pid] || 0) + qty;
+        }
+      } catch (err) {
+        console.error('[Gate] getHolderMap error:', err);
+      }
+
+      return found;
+    }
+
+    function evaluateVip(foundMap) {
+      return ACCESS_POLICIES.every(p => (foundMap[p.policyId] || 0) >= p.minAssets);
+    }
+
+    // Reuse loc_access.php for gate passes (same as your existing pattern)
+    async function checkPaidAccessStatus() {
+      if (!userIdentity) return null;
+
+      try {
+        const res = await fetch('loc_access.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'check',
+            identity: userIdentity
+          })
+        });
+
+        if (!res.ok) {
+          console.error('[Gate] checkPaidAccessStatus HTTP error:', res.status);
+          return null;
+        }
+
+        const data = await res.json();
+        console.log('[Gate] checkPaidAccessStatus:', data);
+
+        if (data.status === 'active') {
+          return data; // { status, lastPaidDate, expiresOn, ... }
+        }
+        return null;
+      } catch (err) {
+        console.error('[Gate] checkPaidAccessStatus error:', err);
+        return null;
+      }
+    }
+
+    async function logPaidAccess(txHash) {
+      if (!userIdentity) return;
+
+      try {
+        const res = await fetch('loc_access.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'log',
+            identity: userIdentity,
+            txHash
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+        console.log('[Gate] logPaidAccess response:', data);
+      } catch (err) {
+        console.error('[Gate] logPaidAccess error:', err);
+      }
+    }
+
+    function updateGateUi(foundMap, paidInfo) {
+      const shortAddr = shortenAddress(userAddress);
+      const requirementsDetail = buildRequirementsDetail(foundMap).replace(/\n/g, '<br>');
+
+      if (walletStatusEl) {
+        const typeLabel = isVipHolder
+          ? 'VIP (Refresh Whale)'
+          : (hasPaidAccess ? 'Paid access' : 'Standard (payment required)');
+        walletStatusEl.textContent = `Connected: ${shortAddr} • Access: ${typeLabel}`;
+        walletStatusEl.classList.remove('hidden');
+      }
+
+      if (!accessMessageEl) return;
+
+      if (isVipHolder) {
+        accessMessageEl.innerHTML =
+          `<strong>You qualify for VIP access.</strong><br>` +
+          `Requirements:<br>${requirementsDetail}`;
+        payAccessBtn.textContent = 'Enter app';
+        payAccessBtn.style.display = 'inline-flex';
+        payAccessBtn.disabled = false;
+        return;
+      }
+
+      if (hasPaidAccess && paidInfo) {
+        let extra = '';
+        if (paidInfo.expiresOn) {
+          const exp = new Date(paidInfo.expiresOn);
+          extra = `<br>Access expires on: ${exp.toLocaleString()}`;
+        }
+        accessMessageEl.innerHTML =
+          `<strong>Paid access is active for this wallet.</strong>${extra}<br>` +
+          `Current holdings:<br>${requirementsDetail}`;
+        payAccessBtn.textContent = 'Enter app';
+        payAccessBtn.style.display = 'inline-flex';
+        payAccessBtn.disabled = false;
+        return;
+      }
+
+      const purchaseUrl = getPrimaryPurchaseUrl();
+      accessMessageEl.innerHTML =
+        `<strong>You do not yet meet VIP requirements.</strong><br>` +
+        `Current holdings:<br>${requirementsDetail}<br><br>` +
+        `You can either acquire more at ` +
+        `<a href="${purchaseUrl}" target="_blank" rel="noopener noreferrer">JPG Store</a><br>` +
+        `or pay a one-time access fee of ${GATE_ACCESS_FEE_ADA}₳ to unlock this app.`;
+
+      payAccessBtn.textContent = `Pay ${GATE_ACCESS_FEE_ADA}₳ & enter app`;
+      payAccessBtn.style.display = 'inline-flex';
+      payAccessBtn.disabled = false;
+    }
+
+    async function refreshAccessState() {
+      if (!meshWallet || !userIdentity) return;
+
+      const holderMap = await getHolderMap();
+      isVipHolder = evaluateVip(holderMap);
+
+      let paidInfo = null;
+      if (!isVipHolder) {
+        paidInfo = await checkPaidAccessStatus();
+        hasPaidAccess = !!paidInfo;
+      } else {
+        hasPaidAccess = true;
+      }
+
+      updateGateUi(holderMap, paidInfo);
+    }
+
+    async function handleConnect() {
+      const walletId = walletSelect.value;
+      if (!walletId) return;
+
+      try {
+        meshWallet   = await BrowserWallet.enable(walletId);
+        userAddress  = await meshWallet.getChangeAddress();
+        userIdentity = await deriveIdentity();
+
+        await refreshAccessState();
+      } catch (err) {
+        console.error('[Gate] connect error:', err);
+        if (walletStatusEl) {
+          walletStatusEl.textContent = 'Wallet connection failed. See console for details.';
+          walletStatusEl.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function payGateAccess() {
+      if (!meshWallet) {
+        alert('Connect a wallet first.');
+        return;
+      }
+
+      const originalLabel = payAccessBtn.textContent;
+      payAccessBtn.disabled = true;
+      payAccessBtn.textContent = 'Waiting for wallet…';
+
+      try {
+        const tx = new Transaction({ initiator: meshWallet });
+        const lovelace = String(GATE_ACCESS_FEE_ADA * 1_000_000);
+
+        tx.sendLovelace(GATE_RECIPIENT_ADDRESS, lovelace);
+
+        if (!userAddress) {
+          userAddress = await meshWallet.getChangeAddress();
+        }
+        tx.setChangeAddress(userAddress);
+
+        const unsigned = await tx.build();
+        const signed   = await meshWallet.signTx(unsigned);
+        const txHash   = await meshWallet.submitTx(signed);
+
+        console.log('[Gate] access payment tx hash:', txHash);
+
+        await logPaidAccess(txHash);
+        hasPaidAccess = true;
+
+        accessMessageEl.innerHTML =
+          `<strong>Payment submitted.</strong><br>` +
+          `Tx: ${txHash}<br>` +
+          `Once it confirms on-chain, your access will be recorded for this wallet.`;
+        payAccessBtn.textContent = 'Enter app';
+        payAccessBtn.disabled = false;
+      } catch (err) {
+        console.error('[Gate] payGateAccess error:', err);
+        alert('There was a problem submitting the transaction. Please try again.');
+        payAccessBtn.textContent = originalLabel;
+        payAccessBtn.disabled = false;
+      }
+    }
+
+    function enterApp() {
+      gateOverlay.classList.add('hidden');
+      protectedArea.classList.remove('hidden');
+
+      // Optional: expose gate state for your app JS to read
+      window.fre5hGateState = {
+        walletAddress: userAddress,
+        identity: userIdentity,
+        isVip: isVipHolder,
+        hasPaidAccess,
+      };
+    }
+
+    connectBtn.addEventListener('click', handleConnect);
+
+    payAccessBtn.addEventListener('click', async () => {
+      if (!meshWallet) {
+        alert('Connect a wallet first.');
+        return;
+      }
+      if (isVipHolder || hasPaidAccess) {
+        enterApp();
+      } else {
+        await payGateAccess();
+      }
+    });
+
+    // Kick off wallet detection immediately
+    detectWallets();
+  </script>
+
+  <!-- APP JS PLACEHOLDER
+       Add your VanID / other app script here. Example:
+       <script type="module" src="vanid-app.js"></script>
+  -->
+</body>
+</html>
