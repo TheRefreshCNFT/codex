@@ -369,9 +369,13 @@
   position: relative;
 }
 
-#settingsToggle {
+#settingsToggle,
+#usernameSection .card.lb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.35em 0.75em;
-  font-size: 1.15em;
+  font-size: 1.25em;
   line-height: 1.2;
   border-radius: 6px;
   background: #2e3d49;
@@ -379,6 +383,8 @@
   color: #fff;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0,0,0,0.45);
+  min-height: 2.65em;
+  white-space: nowrap;
 }
 
 .settings-wrapper.open #settingsToggle {
@@ -538,15 +544,6 @@
 
 #usernameSection .card.lb {
   flex: 0 0 auto;            /* don’t stretch */
-  padding: 0em .5em;
-  font-size: 1.15em;
-  border-radius: 6px 6px 6px 6px;
-  border: 1px solid #fff;
-  background: #2e3d49;
-  color: #fff;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
 }
 
 /* when #usernameSection has .hide-join, hide the input + submit row */
@@ -5090,10 +5087,13 @@ poll();
     // 3. Leaderboard Button Sizing (Fixes "button is very small")
     // We add this specific check to bump the Leaderboard button size slightly on mobile
     var lbBtn = document.querySelector('#usernameSection .card.lb');
-    if (lbBtn) {
-        lbBtn.style.fontSize = '1.75em';
-        lbBtn.style.padding = '0.25em 0.75em';
-    }
+    var settingsBtn = document.getElementById('settingsToggle');
+    [lbBtn, settingsBtn].forEach(function(btn) {
+      if (!btn) return;
+      btn.style.fontSize = '1.75em';
+      btn.style.padding = '0.25em 0.75em';
+      btn.style.minHeight = '2.75em';
+    });
 
     // --- DELETED: The 'That's Me' font resize (Fixes "Too Big") ---
     // The default CSS clamp() handles this better.
