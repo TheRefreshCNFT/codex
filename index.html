@@ -19,12 +19,14 @@
   align-items: center;
   justify-content: center;  /* or flex-start if you want it left-justified */
   gap: 1em;                  /* space between the button and the input row */
-  text-align: left;    
+  text-align: left;
   margin: 0.25em 0 !important;
+  flex-wrap: wrap;
 }
 
 /* style the post-submit username display */
-#usernameSection > p {
+#usernameSection > p,
+#usernameSection .username-pill {
   margin: 0;              /* you already have this */
   margin: 0.075em 0 !important;
   padding: 0.05em 1em;     /* give it some breathing room */
@@ -35,10 +37,10 @@
   background: #2e3d49;    /* match your theme */
   border: 1px solid #fff; /* give it a frame */
   border-radius: 6px;     /* soften the corners */
-  box-shadow: 
+  box-shadow:
     0 2px 4px rgba(0,0,0,0.6),   /* deep drop-shadow */
     inset 0 0 8px rgba(255,255,255,0.85); /* subtle inner glow */
-  text-shadow: 
+  text-shadow:
     0 1px 2px rgba(0,0,0,0.8),    /* lift the letters */
     0 0 8px rgba(255,255,255,1);/* a little halo if you like */
 }
@@ -50,8 +52,13 @@
   display: flex;
   align-items: center;
   gap: 0.5em;
-  width: 100%; 
+  width: 100%;
+  max-width: 640px;
   margin: .25em auto 0.15em;
+}
+
+#usernameSection .username-row.signed-in {
+  justify-content: center;
 }
 
 /* styled text‐field */
@@ -334,13 +341,28 @@
 .grid-menu {
   position: absolute; z-index: 10010; top: 64px; /* below buttons */
   background: #2e3d49; border: 1px solid #fff; border-radius: 8px;
-  padding: .25em; display: none; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,.6);
+  padding: .25em; display: none; min-width: 200px; box-shadow: 0 8px 16px rgba(0,0,0,.6);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25em;
 }
 .grid-menu button{
-  display:block; width:100%; text-align:left; background:transparent; color:#fff;
+  display:block; width:100%; text-align:center; background:transparent; color:#fff;
   border:none; padding:.5em .75em; font-size:1.25em; cursor:pointer;
 }
 .grid-menu button:hover{ background: rgba(255,255,255,.1); }
+
+.top-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  position: relative;
+}
+
+.top-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Square layouts switch #mainDeck to grid, keep centered; OG stays flex */
 #mainDeck.square {
@@ -1302,7 +1324,8 @@ button {
 }
 
   /* Adjust font sizes proportionally */
-  #usernameSection > p {
+  #usernameSection > p,
+  #usernameSection .username-pill {
     font-size: clamp(3em, 5vw, 4em) !important;
   }
 
@@ -2094,15 +2117,21 @@ function willThisWindowFinish(track, winnersArr) {
                 headers: {'Content-Type':'application/x-www-form-urlencoded'},
                 body: `action=join&user=${encodeURIComponent(username)}`
               });
-              // swap out input/confirm row for plain-text username
+              // swap out input/confirm row for plain-text username while preserving layout
               // prefer removing the confirm prompt if it exists, otherwise the input row
               const confirmDiv = document.getElementById('usernameConfirm');
               const row        = confirmDiv || document.querySelector('#usernameSection .username-row');
 
-              const p   = document.createElement('p');
-              p.style.cssText = 'font-size:5em;font-weight:bold;margin:0';
-              p.textContent   = username;
-              row.replaceWith(p);
+              if (row) {
+                row.classList.add('signed-in');
+                row.innerHTML = '';
+
+                const p = document.createElement('p');
+                p.className = 'username-pill';
+                p.textContent = username;
+                row.appendChild(p);
+              }
+
               document.getElementById('usernameMessage').textContent = '';
             }
 
@@ -2171,12 +2200,7 @@ function willThisWindowFinish(track, winnersArr) {
 
         // wrapper for #, 🎙, 💬, 🔊
         const btnWrap = document.createElement('span');
-        btnWrap.style.cssText = `
-          display:inline-flex;
-          align-items:center;
-          gap:.35em;
-          position:relative;
-        `;
+        btnWrap.className = 'top-controls';
 
         // # grid button
         const gridBtn = document.createElement('button');
@@ -2247,7 +2271,7 @@ function willThisWindowFinish(track, winnersArr) {
         // open/close
         gridBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          menu.style.display = (menu.style.display === 'block' ? 'none' : 'block');
+          menu.style.display = (menu.style.display === 'grid' ? 'none' : 'grid');
         });
         document.addEventListener('click', () => { menu.style.display = 'none'; });
         menu.querySelectorAll('button').forEach(b => {
@@ -4599,7 +4623,7 @@ document.body.style.fontSize = '19px';
     if (submit) submit.style.fontSize = '1.75em';
 
     // Username display
-    var userP = document.querySelector('#usernameSection > p');
+    var userP = document.querySelector('#usernameSection .username-pill, #usernameSection > p');
     if (userP) {
       userP.style.fontSize = '4em';
       userP.style.padding = '0.2em 0.7em';
