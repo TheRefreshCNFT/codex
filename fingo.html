@@ -350,40 +350,130 @@
 #usernameSection {
   display: flex;
   align-items: center;
-  justify-content: center;  /* or flex-start if you want it left-justified */
-  gap: 1em;                  /* space between the button and the input row */
-  text-align: left;    
+  justify-content: space-between;
+  gap: 1em;
+  text-align: left;
   margin: 0.25em 0 !important;
+  flex-wrap: wrap;
+}
+
+.top-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  flex: 0 0 auto;
+}
+
+.settings-wrapper {
+  position: relative;
+}
+
+#settingsToggle {
+  padding: 0.4em 0.75em;
+  font-size: 1em;
+  border-radius: 6px;
+  background: #2e3d49;
+  border: 1px solid #fff;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.45);
+}
+
+.settings-wrapper.open #settingsToggle {
+  background: #364757;
+}
+
+.settings-menu {
+  position: absolute;
+  top: calc(100% + 0.35em);
+  left: 0;
+  display: none;
+  flex-direction: column;
+  gap: 0.35em;
+  background: #2e3d49;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  padding: 0.35em;
+  min-width: 170px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+  z-index: 10012;
+}
+
+.settings-wrapper.open .settings-menu {
+  display: flex;
+}
+
+.settings-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 0.45em 0.6em;
+  font-size: 1.1em;
+  cursor: pointer;
+}
+
+.settings-menu button:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.chat-btn {
+  font-size: 2.25em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  padding: 0.1em 0.2em;
+}
+
+.grid-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.username-stack {
+  flex: 1 1 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
 }
 
 /* style the post-submit username display */
 #usernameSection > p {
-  margin: 0;              /* you already have this */
+  margin: 0;
   margin: 0.075em 0 !important;
-  padding: 0.05em 1em;     /* give it some breathing room */
-  display: inline-block;  /* shrink-wrap to content */
-  font-size: 2em;       /* or whatever size feels right */
+  padding: 0.35em 1em;
+  display: inline-block;
+  font-size: 1.75em;
   font-weight: bold;
-  color: #000;            /* text color */
-  background: #2e3d49;    /* match your theme */
-  border: 1px solid #fff; /* give it a frame */
-  border-radius: 6px;     /* soften the corners */
-  box-shadow: 
-    0 2px 4px rgba(0,0,0,0.6),   /* deep drop-shadow */
-    inset 0 0 8px rgba(255,255,255,0.85); /* subtle inner glow */
-  text-shadow: 
-    0 1px 2px rgba(0,0,0,0.8),    /* lift the letters */
-    0 0 8px rgba(255,255,255,1);/* a little halo if you like */
+  color: #000;
+  background: #2e3d49;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.6),
+    inset 0 0 8px rgba(255,255,255,0.85);
+  text-shadow:
+    0 1px 2px rgba(0,0,0,0.8),
+    0 0 8px rgba(255,255,255,1);
 }
 
 
 /* flex‐row wrapper */
-/* flex‐row wrapper (unchanged) */
 #usernameSection .username-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5em;
-  width: 100%; 
+  width: 100%;
+  max-width: 720px;
   margin: .25em auto 0.15em;
 }
 
@@ -391,7 +481,7 @@
 #usernameInput {
   flex: 1;
   padding: .5em .5em;     /* 1em top/bottom gives more height */
-  font-size: 2.15em;
+  font-size: 1.9em;
   border-radius: 6px 6px 6px 6px;
   border: 2px solid #fff;
   background: #2e3d49;
@@ -409,7 +499,7 @@
 #usernameSubmit {
   flex: 0 0 auto;
   padding: .5em .75em;
-  font-size: 2em;
+  font-size: 1.85em;
   border-radius: 6px 6px 6px 6px;
   border: 1px solid #fff;
   background: #2e3d49;
@@ -425,12 +515,13 @@
   margin-top: 0.15em;
   height: 1.2em;
   color: #fff;
+  text-align: center;
 }
 
 #usernameSection .card.lb {
   flex: 0 0 auto;            /* don’t stretch */
   padding: 0em .5em;
-  font-size: 1.25em;
+  font-size: 1.15em;
   border-radius: 6px 6px 6px 6px;
   border: 1px solid #fff;
   background: #2e3d49;
@@ -465,6 +556,16 @@
   text-shadow: 0 2px 8px #ffffff, 0 0 2px #ffffff;
   min-height: 3.5rem;
   margin: 1em;
+  color: #000;
+  background: #2e3d49;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  padding: 0.35em 0.75em;
+  display: inline-block;
+  text-align: center;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.6),
+    inset 0 0 8px rgba(255,255,255,0.85);
 }
 
    /* Text colors */
@@ -665,13 +766,21 @@
 
    /* ── Grid selector dropdown ─────────────────────────── */
 .grid-menu {
-  position: absolute; z-index: 10010; top: 64px; /* below buttons */
-  background: #2e3d49; border: 1px solid #fff; border-radius: 8px;
-  padding: .25em; display: none; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,.6);
+  position: absolute;
+  z-index: 10010;
+  top: calc(100% + 0.35em);
+  left: 0;
+  background: #2e3d49;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  padding: .25em;
+  display: none;
+  min-width: 180px;
+  box-shadow: 0 8px 16px rgba(0,0,0,.6);
 }
 .grid-menu button{
   display:block; width:100%; text-align:left; background:transparent; color:#fff;
-  border:none; padding:.5em .75em; font-size:1.25em; cursor:pointer;
+  border:none; padding:.5em .75em; font-size:1.15em; cursor:pointer;
 }
 .grid-menu button:hover{ background: rgba(255,255,255,.1); }
 
@@ -1634,10 +1743,10 @@ button {
   }
 }
 
-  /* Adjust font sizes proportionally */
-  #usernameSection > p {
-    font-size: clamp(3em, 5vw, 4em) !important;
-  }
+    /* Adjust font sizes proportionally */
+    #usernameSection > p {
+      font-size: clamp(1.6em, 4vw, 2.5em) !important;
+    }
 
   #legendDeck ul > li:nth-child(-n+4) {
     font-size: clamp(1.5em, 2.5vw, 2.5em) !important;
@@ -1724,16 +1833,19 @@ button {
   <div class="centerWrap">
     <!-- Username Entry -->
 <section id="usernameSection">
-  <div class="card lb"      id="lbBtn"><p>Leader Board</p></div>
-  <div class="username-row">
-    <input
-      type="text"
-      id="usernameInput"
-      placeholder="Enter Discord Username"
-    >
-    <button id="usernameSubmit">Submit</button>
+  <div class="top-controls" id="leftControls"></div>
+  <div class="username-stack">
+    <div class="username-row">
+      <input
+        type="text"
+        id="usernameInput"
+        placeholder="Enter Discord Username"
+      >
+      <button id="usernameSubmit">Submit</button>
+    </div>
+    <div id="usernameMessage"></div>
   </div>
-  <div id="usernameMessage"></div>
+  <div class="card lb"      id="lbBtn"><p>Leader Board</p></div>
 </section>
     <div id="node">
       <section>
@@ -2433,7 +2545,7 @@ function willThisWindowFinish(track, winnersArr) {
               const row        = confirmDiv || document.querySelector('#usernameSection .username-row');
 
               const p   = document.createElement('p');
-              p.style.cssText = 'font-size:5em;font-weight:bold;margin:0';
+              p.style.cssText = 'margin:0;font-weight:bold';
               p.textContent   = username;
               row.replaceWith(p);
               document.getElementById('usernameMessage').textContent = '';
@@ -2459,22 +2571,27 @@ function willThisWindowFinish(track, winnersArr) {
 
           signIn();
 
-                            // ——— Audio toggle button ———
+        // ——— Audio toggle button ———
         // ——— Top-right controls: #, 🎙, 💬, 🔊 ———
         const lbBtn = document.getElementById('lbBtn');
+        const leftControls = document.getElementById('leftControls') || lbBtn.parentNode;
+
+        const settingsWrap = document.createElement('div');
+        settingsWrap.className = 'settings-wrapper';
+
+        const settingsToggle = document.createElement('button');
+        settingsToggle.id = 'settingsToggle';
+        settingsToggle.textContent = 'Settings';
+        settingsWrap.appendChild(settingsToggle);
+
+        const settingsMenu = document.createElement('div');
+        settingsMenu.className = 'settings-menu';
+        settingsWrap.appendChild(settingsMenu);
 
         // 🔊 game audio toggle
         const audioToggle = document.createElement('button');
         audioToggle.id = 'audioToggle';
         audioToggle.textContent = '🔇';
-        audioToggle.style.cssText = `
-          font-size: 3em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          margin-right: 0.25em;
-          color: #fff;
-        `;
         audioToggle.addEventListener('click', () => {
           audioEnabled = !audioEnabled;
           audioToggle.textContent = audioEnabled ? '🔊' : '🔇';
@@ -2502,26 +2619,10 @@ function willThisWindowFinish(track, winnersArr) {
           }
         });
 
-        // wrapper for #, 🎙, 💬, 🔊
-        const btnWrap = document.createElement('span');
-        btnWrap.style.cssText = `
-          display:inline-flex;
-          align-items:center;
-          gap:.35em;
-          position:relative;
-        `;
-
         // # grid button
         const gridBtn = document.createElement('button');
         gridBtn.id = 'gridBtn';
         gridBtn.textContent = '#';
-        gridBtn.style.cssText = `
-          font-size: 3em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color:#fff;
-        `;
         gridBtn.hidden = true; // hidden for everyone until admin logs in
 
         // 🎙 mic button (muted by default)
@@ -2529,11 +2630,6 @@ function willThisWindowFinish(track, winnersArr) {
         micBtn.id = 'micBtn';
         micBtn.textContent = '🎙';       // OFF
         micBtn.style.cssText = `
-          font-size: 3em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color:#fff;
           opacity:0.3;
         `;
         micBtn.addEventListener('click', () => {
@@ -2545,13 +2641,7 @@ function willThisWindowFinish(track, winnersArr) {
         const chatBtn = document.createElement('button');
         chatBtn.id = 'chatBtn';
         chatBtn.textContent = '💬';
-        chatBtn.style.cssText = `
-          font-size: 3em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color:#fff;
-        `;
+        chatBtn.className = 'chat-btn';
 
         // start with chat + mic disabled until player has joined
         if (sIn === 'no') {
@@ -2582,7 +2672,6 @@ function willThisWindowFinish(track, winnersArr) {
           e.stopPropagation();
           menu.style.display = (menu.style.display === 'block' ? 'none' : 'block');
         });
-        document.addEventListener('click', () => { menu.style.display = 'none'; });
         menu.querySelectorAll('button').forEach(b => {
           b.addEventListener('click', () => {
             setGridMode(b.dataset.mode);
@@ -2590,13 +2679,37 @@ function willThisWindowFinish(track, winnersArr) {
           });
         });
 
-        // assemble: [#] [🎙] [💬] [🔊] [Leader Board]
-        btnWrap.appendChild(gridBtn);
-        btnWrap.appendChild(micBtn);
-        btnWrap.appendChild(chatBtn);
-        btnWrap.appendChild(audioToggle);
-        btnWrap.appendChild(menu);
-        lbBtn.parentNode.insertBefore(btnWrap, lbBtn);
+        const gridWrap = document.createElement('div');
+        gridWrap.className = 'grid-wrapper';
+        gridWrap.appendChild(gridBtn);
+        gridWrap.appendChild(menu);
+
+        settingsMenu.appendChild(gridWrap);
+        settingsMenu.appendChild(micBtn);
+        settingsMenu.appendChild(audioToggle);
+
+        const closeMenus = () => {
+          settingsWrap.classList.remove('open');
+          settingsMenu.style.display = 'none';
+          menu.style.display = 'none';
+        };
+
+        settingsToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const willOpen = !settingsWrap.classList.contains('open');
+          closeMenus();
+          if (willOpen) {
+            settingsWrap.classList.add('open');
+            settingsMenu.style.display = 'flex';
+          }
+        });
+
+        settingsMenu.addEventListener('click', (e) => e.stopPropagation());
+        menu.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', closeMenus);
+
+        leftControls.appendChild(settingsWrap);
+        leftControls.appendChild(chatBtn);
 
         initChatSystem(chatBtn);
         startChatPolling();
