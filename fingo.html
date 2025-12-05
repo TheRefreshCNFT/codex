@@ -2488,7 +2488,11 @@ function willThisWindowFinish(track, winnersArr) {
                   <button id="usernameConfirmYes">THAT'S ME!</button>
                   <a href="#" id="usernameConfirmNo" style="margin-left:1em;font-size:0.75em;">Not me!</a>
                 `;
-                usernameSection.insertBefore(confirm, document.getElementById('usernameMessage'));
+                const usernameStack = usernameSection.querySelector('.username-stack');
+                const usernameMsg   = usernameStack?.querySelector('#usernameMessage');
+                if (usernameStack && usernameMsg) {
+                  usernameStack.insertBefore(confirm, usernameMsg);
+                }
                 // YES → join with stored name
                 document.getElementById('usernameConfirmYes')
                         .addEventListener('click', () => {
