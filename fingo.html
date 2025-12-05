@@ -93,7 +93,7 @@
         padding: 0 var(--pad);
       }
 
-      #gateOverlay .gate-card {
+      #gateOverlay .card {
         background: rgba(5, 10, 24, 0.9);
         border-radius: 18px;
         border: 1px solid rgba(120, 141, 255, 0.25);
@@ -104,6 +104,15 @@
         backdrop-filter: blur(10px);
         padding: 2rem;
         margin: 2rem auto;
+      }
+
+      /* Gate layout: summary card + details card share width */
+      #gateOverlay .gate-main-card {
+        margin-bottom: 1.25rem;
+      }
+
+      #gateOverlay .gate-details-card {
+        margin-top: 0;
       }
 
       #gateOverlay .row {
@@ -323,7 +332,7 @@
       @media (max-width: 600px) {
         #gateOverlay header .container { padding-top: 1.5rem; }
         #gateOverlay header h1 { font-size: 1.9rem; }
-        #gateOverlay .gate-card { margin-top: 1.5rem; padding: 1.5rem; }
+        #gateOverlay .card { margin-top: 1.5rem; padding: 1.5rem; }
         #gateOverlay .row { flex-direction: column; align-items: stretch; }
       }
   </style>
@@ -5411,33 +5420,35 @@ if (isIOS) {
   <div id="gateOverlay">
     <img src="RF5.png" alt="Fre5h Logo" class="brand-logo">
 
-    <header>
-      <div class="container">
-        <!-- 🔁 Update this title per app -->
-        <h1 class="backups-logo-text">
-          <span class="backups-logo-text-main">Refresh Bingo</span>
-          <span class="backups-logo-beta">BETA</span>
-        </h1>
-
-        <p id="description">
-          Where Web3 & Fun come to hang! 
-        </p>
-
-        <p id="instructions"></p>
-
-        <div class="row" id="connectRow">
-          <select id="walletSelect">
-            <option value="">Select Wallet…</option>
-          </select>
-          <button id="connectBtn" disabled>Connect Wallet</button>
-        </div>
-
-        <div id="walletStatus" class="hidden"></div>
-      </div>
-    </header>
-
     <div class="container">
-      <div class="gate-card">
+      <!-- Top summary / connect card -->
+      <div class="card gate-main-card">
+        <header>
+          <!-- 🔁 Update this title per app -->
+          <h1 class="backups-logo-text">
+            <span class="backups-logo-text-main">Refresh Bingo</span>
+            <span class="backups-logo-beta">BETA</span>
+          </h1>
+
+          <p id="description">
+            Where Web3 & Fun come to hang!
+          </p>
+
+          <p id="instructions"></p>
+
+          <div class="row" id="connectRow">
+            <select id="walletSelect">
+              <option value="">Select Wallet…</option>
+            </select>
+            <button id="connectBtn" disabled>Connect Wallet</button>
+          </div>
+
+          <div id="walletStatus" class="hidden"></div>
+        </header>
+      </div>
+
+      <!-- Details card -->
+      <div class="card gate-details-card">
         <h2>Details</h2>
 
         <!-- 🔁 You said you'll update this section text yourself -->
@@ -5452,7 +5463,6 @@ if (isIOS) {
           </ul>
         </div>
 
-        <p id="gateBlurb" class="loc-hint"></p>
         <p id="accessMessage" class="access-message"></p>
 
         <!-- Button is used both for "Pay & enter" and "Enter app" -->
@@ -5466,8 +5476,9 @@ if (isIOS) {
 
         <div class="loc-legal">
           <p class="loc-legal-text">
-            This gate checks your wallet for specified policy holdings and optionally charges an ADA transaction to unlock access. No private keys are ever shared.
+            This gate checks your on-chain holdings and sends an ADA transaction to unlock access.
           </p>
+          <p id="gateBlurb" class="loc-hint"></p>
         </div>
       </div>
     </div>
