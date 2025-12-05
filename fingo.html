@@ -2584,7 +2584,9 @@ function willThisWindowFinish(track, winnersArr) {
 
             function updateGridBtnVisibility(nameToCheck = username) {
               if (gridBtn) {
-                gridBtn.hidden = !isAdmin(nameToCheck);
+                const shouldShow = isAdmin(nameToCheck);
+                gridBtn.hidden = !shouldShow;
+                gridBtn.style.display = shouldShow ? '' : 'none';
               }
             }
 
@@ -2686,6 +2688,7 @@ function willThisWindowFinish(track, winnersArr) {
         gridBtn.id = 'gridBtn';
         gridBtn.textContent = '#';
         gridBtn.hidden = true; // hidden for everyone until admin logs in
+        gridBtn.style.display = 'none';
         updateGridBtnVisibility();
 
         // 🎙 mic button (muted by default)
@@ -4002,6 +4005,11 @@ function onBingoWindowEndWithoutWin(callType) {
       // ─── Helpers & Utilities ───
 
 function signIn() {
+
+  // Always hide admin-only controls unless an admin is logged in.
+  if (typeof updateGridBtnVisibility === 'function') {
+    updateGridBtnVisibility(sIn === 'no' ? '' : username);
+  }
 
   if (sIn === 'no') {
     // disable all three buttons
