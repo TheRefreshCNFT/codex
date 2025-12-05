@@ -442,8 +442,8 @@
   color: #fff;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 6px;
-  padding: 0.35em 0.45em;
-  font-size: 1em;
+  padding: 0.5em 0.65em;
+  font-size: 1.15em;
   cursor: pointer;
 }
 
@@ -2275,6 +2275,7 @@ const ICE_SERVERS = {
 
 
 
+      const ADMIN_USERNAME = 'ThisCrazyLife';
       let username = '';
       let selectionInterval = null;
       const TITLE_SELECTION_INTERVAL = 4500;
@@ -2562,9 +2563,7 @@ function willThisWindowFinish(track, winnersArr) {
                     sIn = 'no';
 
                                         // hide admin-only # button
-                    if (gridBtn) {
-                      gridBtn.hidden = true;
-                    }
+                    updateGridBtnVisibility('');
 
                     // remove the confirm row, show the input again
                     confirm.remove();
@@ -2579,15 +2578,25 @@ function willThisWindowFinish(track, winnersArr) {
 
 
 
+            function isAdmin(name) {
+              return (name || '').trim().toLowerCase() === ADMIN_USERNAME.toLowerCase();
+            }
+
+            function updateGridBtnVisibility(nameToCheck = username) {
+              if (gridBtn) {
+                const shouldShow = isAdmin(nameToCheck);
+                gridBtn.hidden = !shouldShow;
+                gridBtn.style.display = shouldShow ? '' : 'none';
+              }
+            }
+
             //Persist the given username, tell server, and update the UI.
             function joinUser(name) {
               username = name;
               localStorage.setItem('username', username);
 
                             // show # layout button only for admin
-              if (gridBtn) {
-                gridBtn.hidden = (name !== 'ThisCrazyLife');
-              }
+              updateGridBtnVisibility(name);
 
               // tell server
               fetch('update_game_track.php', {
@@ -2675,10 +2684,12 @@ function willThisWindowFinish(track, winnersArr) {
         });
 
         // # grid button
-        const gridBtn = document.createElement('button');
+        let gridBtn = document.createElement('button');
         gridBtn.id = 'gridBtn';
         gridBtn.textContent = '#';
         gridBtn.hidden = true; // hidden for everyone until admin logs in
+        gridBtn.style.display = 'none';
+        updateGridBtnVisibility();
 
         // 🎙 mic button (muted by default)
         const micBtn = document.createElement('button');
@@ -3994,6 +4005,11 @@ function onBingoWindowEndWithoutWin(callType) {
       // ─── Helpers & Utilities ───
 
 function signIn() {
+
+  // Always hide admin-only controls unless an admin is logged in.
+  if (typeof updateGridBtnVisibility === 'function') {
+    updateGridBtnVisibility(sIn === 'no' ? '' : username);
+  }
 
   if (sIn === 'no') {
     // disable all three buttons
